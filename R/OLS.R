@@ -6,7 +6,7 @@
 #' 
 #' @details \code{OLS} estimates gravity models in their traditional, additive, 
 #' form via Ordinary Least Squares using the \code{lm} function. 
-#' MR terms are not considered by this function 
+#' Multilateral Resistance terms are not considered by this function. 
 #' To execute the function a square gravity dataset with all pairs of 
 #' countries, ISO-codes for the country of origin and destination, a measure of 
 #' distance between the bilateral partners as well as all 
@@ -32,22 +32,25 @@
 #' The function \code{OLS} was therefore tested for cross-sectional data.
 #' For the use with panel data no tests were performed. 
 #' Therefore, it is up to the user to ensure that the functions can be applied 
-#' to panel data. For a comprehensive overview of gravity models for panel data 
-#' see Egger and Pfaffermayr (2003), Gomez-Herrera (2013) and Head, Mayer and 
-#' Ries (2010) as well as the references therein (see also the references 
-#' included in the descriptions of the different functions). Depending on the 
-#' panel dataset and the variables - specifically the type of fixed effects - 
+#' to panel data. 
+#' Depending on the panel dataset and the variables - 
+#' specifically the type of fixed effects - 
 #' included in the model, it may easily occur that the model is not computable. 
 #' Also, note that by including bilateral fixed effects such as country-pair 
 #' effects, the coefficients of time-invariant observables such as distance 
-#' can no longer be estimated. Depending on the specific model, the code of the 
+#' can no longer be estimated. 
+#' Depending on the specific model, the code of the 
 #' respective function may has to be changed in order to exclude the distance 
-#' variable from the estimation. At the very least, the user should take special 
+#' variable from the estimation. 
+#' At the very least, the user should take special 
 #' care with respect to the meaning of the estimated coefficients and variances 
 #' as well as the decision about which effects to include in the estimation. 
 #' When using panel data, the parameter and variance estimation of the models 
 #' may have to be changed accordingly.
-#' 
+#' For a comprehensive overview of gravity models for panel data 
+#' see Egger and Pfaffermayr (2003), Gomez-Herrera (2013) and Head, Mayer and 
+#' Ries (2010) as well as the references therein. 
+
 #' @param y name (type: character) of the dependent variable in the dataset 
 #' \code{data}, e.g. trade flows. This variable is logged and taken as the 
 #' dependent variable in the estimation.
@@ -70,7 +73,7 @@
 #' is defined as a ratio, it should be logged. Unilateral metric variables 
 #' such as GDPs should be inserted via the arguments \code{inc_o} 
 #' for the country of origin and \code{inc_d} for the country of destination.
-#' Interactions terms can be added.
+#' Interaction terms can be added.
 #' 
 #' @param inc_o variable name (type: character) of the income of the country of 
 #' origin in the dataset \code{data}. If \code{uie=TRUE}, the dependent variable 
@@ -102,8 +105,10 @@
 #' 
 #' @param vce_robust robust (type: logic) determines whether a robust 
 #' variance-covariance matrix should be used. The default is set to \code{TRUE}. 
-#' If set \code{TRUE} the estimation results equal the Stata results for 
-#' robust estimation.
+#' If set \code{TRUE} the estimation results are consistent with the 
+#' Stata code provided at the website
+#' \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
+#' when choosing robust estimation.
 #' 
 #' @param data name of the dataset to be used (type: character). 
 #' To estimate gravity equations, a square gravity dataset including bilateral 
@@ -168,12 +173,11 @@
 #' 
 #' @return
 #' The function returns the summary of the estimated gravity model as an 
-#' \code{lm}-object.
+#' \code{\link[stats]{lm}}-object.
 #' 
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' @import lmtest stats
 #'
 #' @export 
 #' 

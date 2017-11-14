@@ -132,12 +132,11 @@
 #' 
 #' @return
 #' The function returns the summary of the estimated gravity model as an 
-#' \code{lm}-object.
+#' \code{\link[stats]{lm}}-object.
 #' 
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[multiwayvcov]{cluster.vcov}}
 #' 
-#' @import lmtest multiwayvcov stats
 #' 
 #' @export 
 #' 

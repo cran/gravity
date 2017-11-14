@@ -1,13 +1,11 @@
-#' @title Poisson Pseudo Maximum Likelihood, PPML
+#' @title Gamma Pseudo Maximum Likelihood, GPML
 #' 
-#' @description \code{PPML} estimates gravity models in their 
-#' multiplicative form via Poisson Pseudo Maximum Likelihood.
+#' @description \code{GPML} estimates gravity models in their 
+#' multiplicative form via Gamma Pseudo Maximum Likelihood.
 #' 
-#' @details \code{PPML} is an estimation method for gravity models
+#' @details \code{GPML} is an estimation method for gravity models
 #' belonging to generalized linear models.
-#' It is estimated via \code{\link[stats]{glm}} using the quasipoisson distribution and a log-link.
-#' \code{PPML} is presented
-#' in Santos-Silva and Tenreyro (2006) (see the references for more information).  
+#' It is estimated via \code{\link[glm2]{glm2}} using the gamma distribution and a log-link.
 #' To execute the function a square gravity dataset with all pairs of 
 #' countries, ISO-codes for the country of origin and destination, a measure of 
 #' distance between the bilateral partners as well as all 
@@ -16,17 +14,13 @@
 #' Make sure the ISO-codes are of type "character".
 #' Missing bilateral flows as well as incomplete rows should be 
 #' excluded from the dataset.  
-#' Zero trade flows are allowed.
+#' Flows equal to zero have to be excluded as the gamma distribution is used. 
 #' For similar functions, utilizing the multiplicative form via the log-link, 
-#' but different distributions, see \code{\link[gravity]{GPML}}, \code{\link[gravity]{NLS}}, and \code{\link[gravity]{NBPML}}.
+#' but different distributions, see \code{\link[gravity]{PPML}}, \code{\link[gravity]{NLS}}, and \code{\link[gravity]{NBPML}}.
 #' 
-#' \code{PPML} estimation can be used for both, cross-sectional as well as 
-#' panel data. The function is designed to be consistent with the 
-#' results from the Stata function \code{ppml} written by J. M. C.Santos-Silva 
-#' and S. Tenreyro. 
-#' The function \code{PPML} was therefore tested for cross-sectional data.
-#' For the use with panel data no tests were performed. 
-#' Therefore, it is up to the user to ensure that the functions can be applied 
+#' \code{GPML} estimation can be used for both, cross-sectional as well as 
+#' panel data. 
+#' It is up to the user to ensure that the functions can be applied 
 #' to panel data. 
 #' Depending on the panel dataset and the variables - 
 #' specifically the type of fixed effects - 
@@ -66,10 +60,6 @@
 #' 
 #' @param vce_robust robust (type: logic) determines whether a robust 
 #' variance-covariance matrix should be used. The default is set to \code{TRUE}. 
-#' If set \code{TRUE} the estimation results are consistent with the 
-#' Stata code provided at the website
-#' \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
-#' when choosing robust estimation.
 #' 
 #' @param data name of the dataset to be used (type: character). 
 #' To estimate gravity equations, a square gravity dataset including bilateral 
@@ -79,16 +69,17 @@
 #' and other potential influences given as a vector in \code{x} are required. 
 #' All dummy variables should be of type numeric (0/1). Missing trade flows as 
 #' well as incomplete rows should be excluded from the dataset. 
-#' Zero trade flows are allowed.
+#' Flows equal to zero have to be excluded as the gamma distribution 
+#' is used. 
 #' When using panel data, a variable for the time may be included in the 
 #' dataset. Note that the variable for the time dimension should be of 
 #' type: factor. See the references for more information on panel data.
 #' 
 #' @param ... additional arguments to be passed to functions used by 
-#' \code{PPML}.
+#' \code{GPML}.
 #' 
 #' @references 
-#' For more information on the estimation of gravity equations via Poisson
+#' For more information on the estimation of gravity equations via Gamma
 #' Pseudo maximum Likelihood see
 #' 
 #' Santos-Silva, J. M. C. and Tenreyro, S. (2006) <DOI:10.1162/rest.88.4.641> 
@@ -131,24 +122,24 @@
 #' Gravity$lgdp_o <- log(Gravity$gdp_o)
 #' Gravity$lgdp_d <- log(Gravity$gdp_d)
 #' 
-#' PPML(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
+#' GPML(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
 #' vce_robust=TRUE, data=Gravity)
 #' 
-#' PPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), 
+#' GPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), 
 #' vce_robust=TRUE, data=Gravity)
 #' }
 #' 
 #' @return
-#' The function returns the summary of the estimated gravity model as an 
+#' The function returns the summary of the estimated gravity model similar to a 
 #' \code{\link[stats]{glm}}-object.
 #' 
-#' @seealso \code{\link[stats]{glm}}, \code{\link[lmtest]{coeftest}}, 
+#' @seealso \code{\link[glm2]{glm2}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
 #' 
 #' @export 
 #' 
-PPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
+GPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
   if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
   if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
     stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
@@ -161,30 +152,31 @@ PPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
   d          <- data
   d$dist_log <- (log(d[dist][,1]))
   d$y        <- d[y][,1] 
-
+  
   # Model ----------------------------------------------------------------------
   
   vars              <- paste(c("dist_log", x), collapse=" + ")
   form              <- paste("y", "~",vars)
   form2             <- stats::as.formula(form)
-  model.PPML        <- stats::glm(form2, data = d, family = stats::quasipoisson(link = "log"))
-  model.PPML.robust <- lmtest::coeftest(model.PPML, vcov=sandwich::vcovHC(model.PPML, "HC1"))
+  model.GPML         <- glm2::glm2(form2, data = d, family = stats::Gamma(link = "log"), 
+                             control = list(maxit = 200, trace = FALSE)) # maxit default = 25
+  model.GPML.robust  <- lmtest::coeftest(model.GPML, vcov=sandwich::vcovHC(model.GPML, "HC1"))
   
   # Return --------------------------------------------------------------------- 
   
   if(vce_robust == TRUE){
-    summary.PPML.1                <- .robustsummary.lm(model.PPML, robust=TRUE)
-    summary.PPML.1$coefficients   <- model.PPML.robust[1:length(rownames(model.PPML.robust)),]
-    return.object.1               <- summary.PPML.1
+    summary.GPML.1                <- .robustsummary.lm(model.GPML, robust=TRUE)
+    summary.GPML.1$coefficients   <- model.GPML.robust[1:length(rownames(model.GPML.robust)),]
+    return.object.1               <- summary.GPML.1
     return.object.1$call          <- form2
     return.object.1$r.squared     <- NULL 
     return.object.1$adj.r.squared <- NULL
     return.object.1$fstatistic    <- NULL
     return(return.object.1)
-    }
+  }
   
   if(vce_robust == FALSE){
-    return.object.1               <- summary(model.PPML)
+    return.object.1               <- summary(model.GPML)
     return.object.1$call          <- form2
     return(return.object.1)}
   

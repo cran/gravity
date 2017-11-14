@@ -48,8 +48,10 @@ iteration for the estimation to stop. The default is set to 4.}
 
 \item{vce_robust}{robust (type: logic) determines whether a robust 
 variance-covariance matrix should be used. The default is set to \code{TRUE}. 
-If set \code{TRUE} the estimation results equal the Stata results for 
-robust estimation.}
+If set \code{TRUE} the estimation results are consistent with the 
+Stata code provided at the website
+\href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
+when choosing robust estimation.}
 
 \item{verbose}{(type: logic) determines whether the estimated coefficients
 of each iteration should be printed in the console. The default is set
@@ -74,7 +76,7 @@ using panel data, cross-sectional data should be used.}
 }
 \value{
 The function returns the summary of the estimated gravity model as an 
-\code{lm}-object. It furthermore returns the resulting coefficients for each
+\code{\link[stats]{lm}}-object. It furthermore returns the resulting coefficients for each
 iteration.
 }
 \description{
@@ -156,4 +158,3 @@ See \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhors
 \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 \code{\link[sandwich]{vcovHC}}
 }
-

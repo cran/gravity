@@ -52,7 +52,7 @@ type: factor. See the references for more information on panel data.}
 }
 \value{
 The function returns the summary of the estimated gravity model as an 
-\code{lm}-object.
+\code{\link[stats]{lm}}-object.
 }
 \description{
 \code{Tetrads} estimates gravity models 
@@ -149,4 +149,3 @@ and the references therein.
 \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 \code{\link[multiwayvcov]{cluster.vcov}}
 }
-

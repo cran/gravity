@@ -39,8 +39,10 @@ colonial linkages after independence". Journal of International Economics,
 81(1):1-14 (lead article).
 
 In order to have a dataset suited for all functions, a cross-sectional
-dataset is chosen. All incomplete rows and observations with missing or 
-zero trade flows are therefore excluded from the dataset.
+dataset is chosen. All incomplete rows and observations with missing
+trade flows are therefore excluded from the dataset.
+Trade flows equal to zero are excluded as not all functions are capable of
+estimating gravity equations in the presence of zero trade flows.
 
 The original dataset downloaded at 
 \url{http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip} 
@@ -91,4 +93,3 @@ independence". Journal of International Economics, 81(1):1-14
 (lead article).
 }
 \keyword{datasets}
-

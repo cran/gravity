@@ -60,8 +60,10 @@
 #' 
 #' @param vce_robust robust (type: logic) determines whether a robust 
 #' variance-covariance matrix should be used. The default is set to \code{TRUE}. 
-#' If set \code{TRUE} the estimation results equal the Stata results for 
-#' robust estimation.
+#' If set \code{TRUE} the estimation results are consistent with the 
+#' Stata code provided at the website
+#' \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
+#' when choosing robust estimation.
 #' 
 #' @param data name of the dataset to be used (type: character). 
 #' To estimate gravity equations, a square gravity dataset including bilateral 
@@ -118,12 +120,11 @@
 #' 
 #' @return
 #' The function returns the summary of the estimated gravity model as an 
-#' \code{lm}-object.
+#' \code{\link[stats]{lm}}-object.
 #' 
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' @import lmtest stats
 #' 
 #' @export 
 #' 

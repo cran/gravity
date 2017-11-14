@@ -1,18 +1,16 @@
-#' @title Fixed Effects
+#' @title Fixed_Effects
 #' 
-#' @description \code{Fixed Effects} estimates gravity models via
+#' @description \code{Fixed_Effects} estimates gravity models via
 #' OLS and fixed effects for the countries of origin and destination. 
 #' These effects catch country specific effects.
 #' 
-#' @details \code{Fixed Effects} 
-#' 
-#' To account for MR terms, Feenstra (2002) and Feenstra (2004) propose to use 
+#' @details To account for MR terms, Feenstra (2002) and Feenstra (2004) propose to use 
 #' importer and exporter fixed effects. Due to the use of these effects, all 
 #' unilateral influences such as GDPs can no longer be estimated. 
-#' A disadvantage of the use of \code{Fixed Effects} is that, when applied to 
+#' A disadvantage of the use of \code{Fixed_Effects} is that, when applied to 
 #' panel data, the number of country-year or country-pair fixed effects can be 
 #' too high for estimation. In addition, no comparative statistics are 
-#' possible with \code{Fixed Effects} as the MR terms are not estimated 
+#' possible with \code{Fixed_Effects} as the MR terms are not estimated 
 #' explicitly. Nevertheless, Head and Mayer (2014) highlight the importance of 
 #' the use of fixed effects. 
 #' To execute the function a square gravity dataset with all pairs of 
@@ -32,30 +30,33 @@
 #' Therefore, no other unilateral variables such as GDP can be
 #' included as independent variables in the estimation.
 #' 
-#' \code{Fixed Effects} estimation can be used for both, cross-sectional as well as 
+#' \code{Fixed_Effects} estimation can be used for both, cross-sectional as well as 
 #' panel data. 
 #' Nonetheless, the function is designed to be consistent with the 
 #' Stata code for cross-sectional data provided at the website
 #' \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
 #' when choosing robust estimation.
-#' The function \code{Fixed Effects} was therefore tested for 
+#' The function \code{Fixed_Effects} was therefore tested for 
 #' For the use with panel data no tests were performed. 
 #' Therefore, it is up to the user to ensure that the functions can be applied 
-#' to panel data. For a comprehensive overview of gravity models for panel data 
-#' see Egger and Pfaffermayr (2003), Gomez-Herrera (2013) and Head, Mayer and 
-#' Ries (2010) as well as the references therein (see also the references 
-#' included in the descriptions of the different functions). Depending on the 
-#' panel dataset and the variables - specifically the type of fixed effects - 
+#' to panel data. 
+#' Depending on the panel dataset and the variables - 
+#' specifically the type of fixed effects - 
 #' included in the model, it may easily occur that the model is not computable. 
 #' Also, note that by including bilateral fixed effects such as country-pair 
 #' effects, the coefficients of time-invariant observables such as distance 
-#' can no longer be estimated. Depending on the specific model, the code of the 
+#' can no longer be estimated. 
+#' Depending on the specific model, the code of the 
 #' respective function may has to be changed in order to exclude the distance 
-#' variable from the estimation. At the very least, the user should take special 
+#' variable from the estimation. 
+#' At the very least, the user should take special 
 #' care with respect to the meaning of the estimated coefficients and variances 
 #' as well as the decision about which effects to include in the estimation. 
 #' When using panel data, the parameter and variance estimation of the models 
 #' may have to be changed accordingly.
+#' For a comprehensive overview of gravity models for panel data 
+#' see Egger and Pfaffermayr (2003), Gomez-Herrera (2013) and Head, Mayer and 
+#' Ries (2010) as well as the references therein. 
 #' 
 #' @param y name (type: character) of the dependent variable in the dataset 
 #' \code{data}, e.g. trade flows. This variable is logged and taken as the 
@@ -82,8 +83,10 @@
 #'
 #' @param vce_robust robust (type: logic) determines whether a robust 
 #' variance-covariance matrix should be used. The default is set to \code{TRUE}. 
-#' If set \code{TRUE} the estimation results equal the Stata results for 
-#' robust estimation.
+#' If set \code{TRUE} the estimation results are consistent with the 
+#' Stata code provided at the website
+#' \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
+#' when choosing robust estimation.
 #' 
 #' @param data name of the dataset to be used (type: character). 
 #' To estimate gravity equations, a square gravity dataset including bilateral 
@@ -103,7 +106,7 @@
 #' \code{x} or \code{fe}.
 #' See the references for more information on panel data.
 #' 
-#' @param ... additional arguments to be passed to \code{Fixed Effects}.
+#' @param ... additional arguments to be passed to \code{Fixed_Effects}.
 #' 
 #' @references 
 #' For more information on fixed effects as well as informaton on gravity models, 
@@ -153,12 +156,11 @@
 #' 
 #' @return
 #' The function returns the summary of the estimated gravity model as an 
-#' \code{lm}-object.
+#' \code{\link[stats]{lm}}-object.
 #' 
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' @import lmtest stats
 #' 
 #' @export 
 #' 
