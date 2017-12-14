@@ -30,7 +30,7 @@
 #' 
 #' @param y name (type: character) of the dependent variable in the dataset 
 #' \code{data}, e.g. trade flows. This dependent variable is divided by the 
-#' product of unilateral incomes (\code{inc_o} and \code{inc_d}, e.g. 
+#' product of unilateral incomes (named \code{inc_o} and \code{inc_d}, e.g. 
 #' GDPs or GNPs of the countries of interest) and logged afterwards.
 #' The transformed variable is then used as the dependent variable in the 
 #' estimation.
@@ -109,13 +109,25 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' data(Gravity_no_zeros)
 #' 
-#' BVW(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", 
-#' vce_robust=TRUE, data=Gravity)
+#' BVW(y="flow", dist="distw", x=c("rta"), 
+#' inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=Gravity_no_zeros)
 #' 
 #' BVW(y="flow", dist="distw", x=c("rta", "comcur", "contig"), 
-#' inc_o="gdp_o", inc_d="gdp_d", vce_robust=FALSE, data=Gravity)
+#' inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o %in% countries_chosen,]
+#' BVW(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=grav_small)
 #' }
 #' 
 #' @return
@@ -125,38 +137,38 @@
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' 
 #' @export 
 #' 
-BVW <- function(y, dist, x, inc_d, inc_o, vce_robust=TRUE, data, ...){
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+BVW <- function(y, dist, x, inc_o, inc_d, vce_robust=TRUE, data, ...){
+  
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
+  if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
+
   if(!is.character(inc_d) | !inc_d%in%colnames(data) | length(inc_d)!=1)  stop("'inc_d' must be a character of length 1 and a colname of 'data'")
   if(!is.character(inc_o) | !inc_o%in%colnames(data) | length(inc_o)!=1)  stop("'inc_o' must be a character of length 1 and a colname of 'data'")
-  if(!is.character(x)     | !all(x%in%colnames(data))) stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
   
   # Transforming data, logging distances ---------------------------------------
   
-  d <- data
-  d$dist_log <- log(d[dist][,1])
-  d$count <- 1:length(d$iso_o)
+  d           <- data
+  d$dist_log  <- log(d[dist][,1])
+  d$count     <- 1:length(d$iso_o)
   
   # Transforming data, logging flows -------------------------------------------
   
-  d$y_inc <- d[y][,1] / (d[inc_o][,1] * d[inc_d][,1])
+  d$y_inc     <- d[y][,1] / (d[inc_o][,1] * d[inc_d][,1])
   d$y_inc_log <- log(d$y_inc)
   
   # GDP weights ----------------------------------------------------------------
   
-  inc_world <- tapply(d[inc_d][,1], d$iso_o, sum)
+  inc_world   <- tapply(d[inc_d][,1], d$iso_o, sum)
   d$inc_world <- as.numeric(inc_world[d$iso_o])
   # same for inc_o or inc_d as we have a squared dataset
   
-  d$theta_i <- d[inc_o][,1] / d$inc_world
-  d$theta_j <- d[inc_d][,1] / d$inc_world
+  d$theta_i   <- d[inc_o][,1] / d$inc_world
+  d$theta_j   <- d[inc_d][,1] / d$inc_world
   
   # Multilateral resistance (MR) for distance ----------------------------------
   
@@ -165,46 +177,37 @@ BVW <- function(y, dist, x, inc_d, inc_o, vce_robust=TRUE, data, ...){
   
   for(i in names(inc_world)){
     
-    d[d$iso_o == i,]$mr.dist.1 <- 
-      sum(d[d$iso_o == i,]$theta_j * d[d$iso_o == i,]$dist_log)
-    
-    d[d$iso_d == i,]$mr.dist.2 <- 
-      sum(d[d$iso_d == i,]$theta_i * d[d$iso_d == i,]$dist_log)
+    d[d$iso_o == i,]$mr.dist.1 <- sum(d[d$iso_o == i,]$theta_j * d[d$iso_o == i,]$dist_log)
+    d[d$iso_d == i,]$mr.dist.2 <- sum(d[d$iso_d == i,]$theta_i * d[d$iso_d == i,]$dist_log)
   }
   
-  d$mr.dist.3 <- sum(d$theta_i * d$theta_j * d$dist_log)
-  
+  d$mr.dist.3   <- sum(d$theta_i * d$theta_j * d$dist_log)
   d$dist_log_mr <- d$dist_log - d$mr.dist.1 - d$mr.dist.2 + d$mr.dist.3
   
   # Multilateral resistance (MR) for the other independent variables -----------
   
-  num.ind.var <- length(x) #independent variables apart from distance
-  
-  d_2 <- d
+  num.ind.var   <- length(x) #independent variables apart from distance
+  d_2           <- d
   
   for(j in 1:num.ind.var){
     
     mr.1 <- noquote(paste(c(noquote(x[j]),noquote(".mr1")),collapse="")) 
     mr.2 <- noquote(paste(c(noquote(x[j]),noquote(".mr2")),collapse=""))  
     mr.3 <- noquote(paste(c(noquote(x[j]),noquote(".mr3")),collapse="")) 
-    mr <- noquote(paste(c(noquote(x[j]),noquote(".mr")),collapse="")) 
+    mr   <- noquote(paste(c(noquote(x[j]),noquote(".mr")),collapse="")) 
     
     d_2[mr.1] <- NA
     d_2[mr.2] <- NA
     d_2[mr.3] <- NA
-    d_2[mr] <- NA
+    d_2[mr]   <- NA
     
     for(i in names(inc_world)){
       
-      d_2[d_2$iso_o == i,][mr.1] <- 
-        sum(d_2[d_2$iso_o == i,]$theta_j * d_2[d_2$iso_o == i,][x[j]])
-      
-      d_2[d_2$iso_d == i,][mr.2] <- 
-        sum(d_2[d_2$iso_d == i,]$theta_i * d_2[d_2$iso_d == i,][x[j]])
+      d_2[d_2$iso_o == i,][mr.1] <- sum(d_2[d_2$iso_o == i,]$theta_j * d_2[d_2$iso_o == i,][x[j]])
+      d_2[d_2$iso_d == i,][mr.2] <- sum(d_2[d_2$iso_d == i,]$theta_i * d_2[d_2$iso_d == i,][x[j]])
     }
     
     d_2[mr.3] <- sum(d_2$theta_i * d_2$theta_j * d_2[x[j]])
-    
     d_2[x[j]] <- d_2[x[j]] - d_2[mr.1] - d_2[mr.2] + d_2[mr.3]
     
   }
@@ -215,27 +218,26 @@ BVW <- function(y, dist, x, inc_d, inc_o, vce_robust=TRUE, data, ...){
   
   # new row in dataset for independent _mr variable
   for(j in x){
-    l <- which(x == j)
-    mr <- x_mr[l]
+    l       <- which(x == j)
+    mr      <- x_mr[l]
     d_2[mr] <- NA
     d_2[mr] <- d_2[x[l]]
   }
   
-  vars <- paste(c("dist_log_mr", x_mr), collapse=" + ")
-  form <- paste("y_inc_log","~",vars)
-  form2 <- stats::as.formula(form)
+  vars      <- paste(c("dist_log_mr", x_mr), collapse=" + ")
+  form      <- paste("y_inc_log","~",vars)
+  form2     <- stats::as.formula(form)
   model.BVW <- stats::lm(form2, data = d_2)
   
   # Return ---------------------------------------------------------------------
   
   if(vce_robust == TRUE){
-    return.object.1 <- .robustsummary.lm(model.BVW, robust=TRUE)
+    return.object.1      <- .robustsummary.lm(model.BVW, robust=TRUE)
     return.object.1$call <- form2
     return(return.object.1)}
   
   if(vce_robust == FALSE){
-    return.object.1 <- .robustsummary.lm(model.BVW, robust=FALSE)
+    return.object.1      <- .robustsummary.lm(model.BVW, robust=FALSE)
     return.object.1$call <- form2
     return(return.object.1)}
-  
 }

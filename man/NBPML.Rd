@@ -55,7 +55,8 @@ multiplicative form via Negative Binomial Pseudo Maximum Likelihood.
 \details{
 \code{NBPML} is an estimation method for gravity models
 belonging to generalized linear models.
-It is estimated via \code{\link[MASS]{glm.nb}}  using the negative binomial distribution and a log-link.
+It is estimated via \code{\link[MASS]{glm.nb}}  
+using the negative binomial distribution and a log-link.
 To execute the function a square gravity dataset with all pairs of 
 countries, ISO-codes for the country of origin and destination, a measure of 
 distance between the bilateral partners as well as all 
@@ -92,16 +93,35 @@ Ries (2010) as well as the references therein.
 }
 \examples{
 \dontrun{
-data(Gravity)
+# Example for data with zero trade flows
+data(Gravity_zeros)
 
-Gravity$lgdp_o <- log(Gravity$gdp_o)
-Gravity$lgdp_d <- log(Gravity$gdp_d)
+NBPML(y="flow", dist="distw", x=c("rta","iso_o","iso_d"), 
+vce_robust=TRUE, data=Gravity_zeros)
 
-NBPML(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
-vce_robust=TRUE, data=Gravity)
+# Example for data without zero trade flows
+data(Gravity_no_zeros)
 
-NBPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), 
-vce_robust=TRUE, data=Gravity)
+Gravity_no_zeros$lgdp_o <- log(Gravity_no_zeros$gdp_o)
+Gravity_no_zeros$lgdp_d <- log(Gravity_no_zeros$gdp_d)
+
+NBPML(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), 
+vce_robust=TRUE, data=Gravity_no_zeros)
+}
+
+\dontshow{
+# examples for CRAN checks:
+# executable in < 5 sec together with the examples above
+# not shown to users
+
+data(Gravity_zeros)
+Gravity_zeros$lgdp_o <- log(Gravity_zeros$gdp_o)
+Gravity_zeros$lgdp_d <- log(Gravity_zeros$gdp_d)
+
+# choose exemplarily 10 biggest countries for check data
+countries_chosen_zeros <- names(sort(table(Gravity_zeros$iso_o), decreasing = TRUE)[1:10])
+grav_small_zeros <- Gravity_zeros[Gravity_zeros$iso_o \%in\% countries_chosen_zeros,]
+NBPML(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), vce_robust=TRUE, data=grav_small_zeros)
 }
 
 }

@@ -4,12 +4,12 @@
 \alias{BVW}
 \title{Bonus vetus OLS, BVW}
 \usage{
-BVW(y, dist, x, inc_d, inc_o, vce_robust = TRUE, data, ...)
+BVW(y, dist, x, inc_o, inc_d, vce_robust = TRUE, data, ...)
 }
 \arguments{
 \item{y}{name (type: character) of the dependent variable in the dataset 
 \code{data}, e.g. trade flows. This dependent variable is divided by the 
-product of unilateral incomes (\code{inc_o} and \code{inc_d}, e.g. 
+product of unilateral incomes (named \code{inc_o} and \code{inc_d}, e.g. 
 GDPs or GNPs of the countries of interest) and logged afterwards.
 The transformed variable is then used as the dependent variable in the 
 estimation.}
@@ -29,12 +29,12 @@ As country specific effects are subdued due to demeaning, no further
 unilateral variables apart from \code{inc_o} and \code{inc_d} can be 
 added.}
 
-\item{inc_d}{variable name (type: character) of the income of the country of 
-destination in the dataset \code{data}. The dependent variable \code{y} is
-divided by the product of the incomes \code{inc_d} and \code{inc_o}.}
-
 \item{inc_o}{variable name (type: character) of the income of the country of 
 origin in the dataset \code{data}. The dependent variable \code{y} is
+divided by the product of the incomes \code{inc_d} and \code{inc_o}.}
+
+\item{inc_d}{variable name (type: character) of the income of the country of 
+destination in the dataset \code{data}. The dependent variable \code{y} is
 divided by the product of the incomes \code{inc_d} and \code{inc_o}.}
 
 \item{vce_robust}{robust (type: logic) determines whether a robust 
@@ -96,13 +96,25 @@ we do not recommend to apply this method in this case.
 }
 \examples{
 \dontrun{
-data(Gravity)
+data(Gravity_no_zeros)
 
-BVW(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", 
-vce_robust=TRUE, data=Gravity)
+BVW(y="flow", dist="distw", x=c("rta"), 
+inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=Gravity_no_zeros)
 
 BVW(y="flow", dist="distw", x=c("rta", "comcur", "contig"), 
-inc_o="gdp_o", inc_d="gdp_d", vce_robust=FALSE, data=Gravity)
+inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=Gravity_no_zeros)
+}
+
+\dontshow{
+# examples for CRAN checks:
+# executable in < 5 sec together with the examples above
+# not shown to users
+
+data(Gravity_no_zeros)
+# choose exemplarily 10 biggest countries for check data
+countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o \%in\% countries_chosen,]
+BVW(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=grav_small)
 }
 
 }

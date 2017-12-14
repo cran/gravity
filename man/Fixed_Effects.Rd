@@ -124,13 +124,25 @@ Ries (2010) as well as the references therein.
 }
 \examples{
 \dontrun{
-data(Gravity)
-
-Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), x=c("rta"), 
-vce_robust=TRUE, data=Gravity)
+data(Gravity_no_zeros)
 
 Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), 
-x=c("rta", "comcur", "contig"), vce_robust=FALSE, data=Gravity)
+x=c("rta"), vce_robust=TRUE, data=Gravity_no_zeros)
+
+Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), 
+x=c("rta", "comcur", "contig"), vce_robust=TRUE, data=Gravity_no_zeros)
+}
+
+\dontshow{
+# examples for CRAN checks:
+# executable in < 5 sec together with the examples above
+# not shown to users
+
+data(Gravity_no_zeros)
+# choose exemplarily 10 biggest countries for check data
+countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o \%in\% countries_chosen,]
+Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), x=c("rta"), vce_robust=TRUE, data=grav_small)
 }
 
 }

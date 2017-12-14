@@ -30,7 +30,7 @@
 #' 
 #' @param y name (type: character) of the dependent variable in the dataset 
 #' \code{data}, e.g. trade flows. This dependent variable is divided by the 
-#' product of unilateral incomes (\code{inc_o} and \code{inc_d}, e.g. 
+#' product of unilateral incomes (named \code{inc_o} and \code{inc_d}, e.g. 
 #' GDPs or GNPs of the countries of interest) and logged afterwards.
 #' The transformed variable is then used as the dependent variable in the 
 #' estimation.
@@ -109,13 +109,25 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' data(Gravity_no_zeros)
 #' 
-#' BVU(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", 
-#' vce_robust=TRUE, data=Gravity)
+#' BVU(y="flow", dist="distw", x=c("rta"), 
+#' inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=Gravity_no_zeros)
 #' 
 #' BVU(y="flow", dist="distw", x=c("rta", "contig", "comcur"), 
-#' inc_o="gdp_o", inc_d="gdp_d", vce_robust=FALSE, data=Gravity)
+#' inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o %in% countries_chosen,]
+#' BVU(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", vce_robust=TRUE, data=grav_small)
 #' }
 #' 
 #' @return
@@ -125,29 +137,29 @@
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' 
 #' @export 
 #' 
-BVU <- function(y, dist, x, inc_d, inc_o, vce_robust=TRUE, data, ...){
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+BVU <- function(y, dist, x, inc_o, inc_d, vce_robust=TRUE, data, ...){
+  
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
+  if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
+
   if(!is.character(inc_d) | !inc_d%in%colnames(data) | length(inc_d)!=1)  stop("'inc_d' must be a character of length 1 and a colname of 'data'")
   if(!is.character(inc_o) | !inc_o%in%colnames(data) | length(inc_o)!=1)  stop("'inc_o' must be a character of length 1 and a colname of 'data'")
-  if(!is.character(x)     | !all(x%in%colnames(data))) stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
   
   # Transforming data, logging distances ---------------------------------------
   
-  d <- data
-  d$dist_log <- (log(d[dist][,1]))
-  d$count <- 1:length(d$iso_o)
+  d               <- data
+  d$dist_log      <- (log(d[dist][,1]))
+  d$count         <- 1:length(d$iso_o)
   
   # Transforming data, logging flows -------------------------------------------
   
-  d$y_inc <- d[y][,1] / (d[inc_o][,1] * d[inc_d][,1])
-  d$y_inc_log <- log(d$y_inc)
+  d$y_inc         <- d[y][,1] / (d[inc_o][,1] * d[inc_d][,1])
+  d$y_inc_log     <- log(d$y_inc)
   
   # Multilateral Resistance (MR) for distance ----------------------------------
   
@@ -163,22 +175,21 @@ BVU <- function(y, dist, x, inc_d, inc_o, vce_robust=TRUE, data, ...){
   }
   
   mean.dist_log.3 <- mean(d$dist_log)
-  
   d$dist_log_mr <- d$dist_log - (mean.dist_log.1[d$iso_o] + 
                                    mean.dist_log.2[d$iso_d] - 
                                    mean.dist_log.3)
   
   # Multilateral Resistance (MR) for the other independent variables -----------
   
-  num.ind.var <- length(x) #independent variables apart from distance
+  num.ind.var    <- length(x) #independent variables apart from distance
   
   mean.ind.var.1 <- list(length=num.ind.var)
   mean.ind.var.2 <- list(length=num.ind.var)
   mean.ind.var.3 <- list(length=num.ind.var)
   
   for(j in 1:num.ind.var){
-    mean.ind.var.1[[j]] <- rep(NA, times=length(unique(d$iso_o)))
-    mean.ind.var.2[[j]] <- rep(NA, times=length(unique(d$iso_o)))
+    mean.ind.var.1[[j]]        <- rep(NA, times=length(unique(d$iso_o)))
+    mean.ind.var.2[[j]]        <- rep(NA, times=length(unique(d$iso_o)))
     names(mean.ind.var.1[[j]]) <- x[j]
     names(mean.ind.var.2[[j]]) <- x[j]
   }
@@ -220,29 +231,26 @@ BVU <- function(y, dist, x, inc_d, inc_o, vce_robust=TRUE, data, ...){
   
   # new row in dataset for independent _mr variable
   for(j in x){
-    l <- which(x == j)
-    mr <- x_mr[l]
+    l       <- which(x == j)
+    mr      <- x_mr[l]
     d_2[mr] <- NA
     d_2[mr] <- d_2[x[l]]
   }
 
-  vars <- paste(c("dist_log_mr", x_mr), collapse=" + ")
-  form <- paste("y_inc_log","~",vars)
-  form2 <- stats::as.formula(form)
+  vars      <- paste(c("dist_log_mr", x_mr), collapse=" + ")
+  form      <- paste("y_inc_log","~",vars)
+  form2     <- stats::as.formula(form)
   model.BVU <- stats::lm(form2, data = d_2)
   
   # Return ---------------------------------------------------------------------
   
   if(vce_robust == TRUE){
-    return.object.1 <- .robustsummary.lm(model.BVU, robust=TRUE)
+    return.object.1      <- .robustsummary.lm(model.BVU, robust=TRUE)
     return.object.1$call <- form2
     return(return.object.1)}
   
   if(vce_robust == FALSE){
-    return.object.1 <- .robustsummary.lm(model.BVU, robust=FALSE)
+    return.object.1      <- .robustsummary.lm(model.BVU, robust=FALSE)
     return.object.1$call <- form2
     return(return.object.1)}
-  
-
-  
 }

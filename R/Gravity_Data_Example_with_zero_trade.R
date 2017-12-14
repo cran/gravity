@@ -1,4 +1,4 @@
-#' @title  Gravity dataset
+#' @title  Gravity dataset with zero trade flows
 #' 
 #' @description 
 #' An edited version of the full gravity dataset: The "square" gravity dataset 
@@ -6,6 +6,9 @@
 #' the article: Head, K., T. Mayer and J. Ries, 2010, "The erosion of 
 #' colonial linkages after independence". Journal of International Economics, 
 #' 81(1):1-14 (lead article).
+#' Dataset \code{Gravity_no_zeros} corresponds to the dataset without zero
+#' trade flows, \code{Gravity_zeros}, on the other hand, includes
+#' zero trade flows.
 #' 
 #' @details 
 #' An edited version of the full gravity dataset: The "square" gravity dataset 
@@ -17,8 +20,10 @@
 #' In order to have a dataset suited for all functions, a cross-sectional
 #' dataset is chosen. All incomplete rows and observations with missing
 #' trade flows are therefore excluded from the dataset.
-#' Trade flows equal to zero are excluded as not all functions are capable of
-#' estimating gravity equations in the presence of zero trade flows.
+#' As some of the functions in the package are capable of
+#' handling zero values in trade flows and some are not, 
+#' two datasets, \code{Gravity_zeros} and \code{Gravity_no_zeros},
+#' are provided. 
 #' 
 #' The original dataset downloaded at 
 #' \url{http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip} 
@@ -44,21 +49,19 @@
 #' 
 #' data06 <- data06[complete.cases(data06) == TRUE,]
 #' 
-#' # Exclusion of trade flows equal to 0
+#' Gravity_zeros <- data06
 #' 
-#' Gravity <- data06[data06$flow != 0,]
-#' 
-#' row.names(Gravity) <- 1:length(row.names(Gravity))
+#' row.names(Gravity_zeros) <- 1:length(row.names(Gravity_zeros))
 #' 
 #' # Divide GDPs by 1,000,000 for scaling purposes
 #' 
-#' Gravity$gdp_o <- Gravity$gdp_o / 1000000
+#' Gravity_zeros$gdp_o <- Gravity_zeros$gdp_o / 1000000
 #' 
-#' Gravity$gdp_d <- Gravity$gdp_d / 1000000
+#' Gravity_zeros$gdp_d <- Gravity_zeros$gdp_d / 1000000
 #' 
 #' @docType data
 #' 
-#' @usage data(Gravity)
+#' @usage data(Gravity_zeros)
 #' 
 #' @format A data frame with 17088 rows and 10 variables:
 #' \describe{
@@ -74,7 +77,7 @@
 #'   \item{comcur}{common currency}
 #' }
 #' 
-#' @name Gravity
+#' @name Gravity_zeros
 #' 
 #' @keywords datasets
 #' 

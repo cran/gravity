@@ -50,7 +50,7 @@
 #' For a comprehensive overview of gravity models for panel data 
 #' see Egger and Pfaffermayr (2003), Gomez-Herrera (2013) and Head, Mayer and 
 #' Ries (2010) as well as the references therein. 
-
+#' 
 #' @param y name (type: character) of the dependent variable in the dataset 
 #' \code{data}, e.g. trade flows. This variable is logged and taken as the 
 #' dependent variable in the estimation.
@@ -162,13 +162,27 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' data(Gravity_no_zeros)
 #' 
-#' OLS(y="flow", dist="distw", x=c("rta", "contig", "comcur"), inc_o="gdp_o", 
-#' inc_d="gdp_d", uie=FALSE, vce_robust=TRUE, data=Gravity)
+#' OLS(y="flow", dist="distw", x=c("rta", "contig", "comcur"), 
+#' inc_o="gdp_o", inc_d="gdp_d", uie=FALSE, 
+#' vce_robust=TRUE, data=Gravity_no_zeros)
 #' 
-#' OLS(y="flow", dist="distw", x=c("rta", "comcur", "contig"), inc_o="gdp_o", 
-#' inc_d="gdp_d", uie=TRUE, vce_robust=FALSE, data=Gravity)
+#' OLS(y="flow", dist="distw", x=c("rta", "comcur", "contig"), 
+#' inc_o="gdp_o", inc_d="gdp_d", uie=TRUE, 
+#' vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o %in% countries_chosen,]
+#' OLS(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", uie=FALSE, vce_robust=TRUE, data=grav_small)
 #' }
 #' 
 #' @return
@@ -184,22 +198,21 @@
 
 OLS <- function(y, dist, x, inc_d, inc_o, uie=FALSE, vce_robust=TRUE, 
                 data, ...){
-  
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
-  if((uie %in% c(TRUE, FALSE)) == FALSE){
-    stop("'uie' has to be either 'TRUE' or 'FALSE'")}
+
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
+  if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
+
   if(!is.character(inc_d) | !inc_d%in%colnames(data) | length(inc_d)!=1)  stop("'inc_d' must be a character of length 1 and a colname of 'data'")
   if(!is.character(inc_o) | !inc_o%in%colnames(data) | length(inc_o)!=1)  stop("'inc_o' must be a character of length 1 and a colname of 'data'")
-  if(!is.character(x)     | !all(x%in%colnames(data))) stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
+  if((uie %in% c(TRUE, FALSE)) == FALSE)                                  stop("'uie' has to be either 'TRUE' or 'FALSE'")
   
   # Transforming data, logging distances ---------------------------------------
   
-  d <- data
-  d$dist_log <- (log(d[dist][,1]))
+  d                  <- data
+  d$dist_log         <- (log(d[dist][,1]))
   
   # uie == TRUE ----------------------------------------------------------------
   
@@ -207,18 +220,17 @@ OLS <- function(y, dist, x, inc_d, inc_o, uie=FALSE, vce_robust=TRUE,
     
     # Transforming data --------------------------------------------------------
     
-    d$y_inc <- d[y][,1] / (d[inc_o][,1] * d[inc_d][,1])
-    d$y_inc_log <- log(d$y_inc)
+    d$y_inc          <- d[y][,1] / (d[inc_o][,1] * d[inc_d][,1])
+    d$y_inc_log      <- log(d$y_inc)
     
     # Model --------------------------------------------------------------------
     
-    vars <- paste(c("dist_log", x), collapse = " + ")
-    form <- paste("y_inc_log", "~", vars)
-    form2 <- stats::as.formula(form)
+    vars             <- paste(c("dist_log", x), collapse = " + ")
+    form             <- paste("y_inc_log", "~", vars)
+    form2            <- stats::as.formula(form)
     
-    model.OLS <- stats::lm(form2, data = d)
-    model.OLS.robust <- lmtest::coeftest(
-      model.OLS, vcov=sandwich::vcovHC(model.OLS, "HC1"))
+    model.OLS        <- stats::lm(form2, data = d)
+    model.OLS.robust <- lmtest::coeftest(model.OLS, vcov=sandwich::vcovHC(model.OLS, "HC1"))
   }
   
   # uie == FALSE ---------------------------------------------------------------
@@ -226,17 +238,16 @@ OLS <- function(y, dist, x, inc_d, inc_o, uie=FALSE, vce_robust=TRUE,
   if(uie==FALSE){
     
     # Transforming data
-    d$y_log <- log(d[y][,1])
-    d$inc_o_log <- log(d[inc_o][,1])
-    d$inc_d_log <- log(d[inc_d][,1])
+    d$y_log         <- log(d[y][,1])
+    d$inc_o_log     <- log(d[inc_o][,1])
+    d$inc_d_log     <- log(d[inc_d][,1])
     
     # Model --------------------------------------------------------------------
-    vars <- paste(c("dist_log", x), collapse = " + ")
-    form <- paste("y_log", "~", vars, "+ inc_o_log + inc_d_log")
-    form2 <- stats::as.formula(form)
+    vars            <- paste(c("dist_log", x), collapse = " + ")
+    form            <- paste("y_log", "~", vars, "+ inc_o_log + inc_d_log")
+    form2           <- stats::as.formula(form)
     
-    model.OLS <- stats::lm(form2, data = d)
-
+    model.OLS       <- stats::lm(form2, data = d)
   }
   
   # Else -----------------------------------------------------------------------
@@ -247,14 +258,12 @@ OLS <- function(y, dist, x, inc_d, inc_o, uie=FALSE, vce_robust=TRUE,
   # Return ---------------------------------------------------------------------
   
   if(vce_robust == TRUE){
-    return.object.1 <- .robustsummary.lm(model.OLS, robust=TRUE)
+    return.object.1      <- .robustsummary.lm(model.OLS, robust=TRUE)
     return.object.1$call <- form2
     return(return.object.1)}
   
   if(vce_robust == FALSE){
-    return.object.1 <- .robustsummary.lm(model.OLS, robust=FALSE)
+    return.object.1      <- .robustsummary.lm(model.OLS, robust=FALSE)
     return.object.1$call <- form2
     return(return.object.1)}
-  
-  
 }

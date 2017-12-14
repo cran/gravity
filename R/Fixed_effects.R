@@ -145,13 +145,25 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
-#' 
-#' Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), x=c("rta"), 
-#' vce_robust=TRUE, data=Gravity)
+#' data(Gravity_no_zeros)
 #' 
 #' Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), 
-#' x=c("rta", "comcur", "contig"), vce_robust=FALSE, data=Gravity)
+#' x=c("rta"), vce_robust=TRUE, data=Gravity_no_zeros)
+#' 
+#' Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), 
+#' x=c("rta", "comcur", "contig"), vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o %in% countries_chosen,]
+#' Fixed_Effects(y="flow", dist="distw", fe=c("iso_o", "iso_d"), x=c("rta"), vce_robust=TRUE, data=grav_small)
 #' }
 #' 
 #' @return
@@ -161,39 +173,34 @@
 #' @seealso \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' 
 #' @export 
-#' 
-Fixed_Effects <- function(y, dist, fe=c("iso_o", "iso_d"), x, 
-                          vce_robust=TRUE, data, ...){
+Fixed_Effects <- function(y, dist, fe=c("iso_o", "iso_d"), x, vce_robust=TRUE, data, ...){
   
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
+  if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
+
   if(!is.character(fe) | !all(unique(unlist(strsplit(fe,c("[:]|[*]"))))%in%colnames(data)) | length(fe)<2)  stop("'fe' must be a character vector of length >=2 and all main variables of the fe's have to be colnames of 'data'")
-  if(!is.character(x)     | !all(x%in%colnames(data))) stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
   
   # Transforming data, logging flows and distances -----------------------------
   
-  d <- data
-  d$dist_log <- (log(d[dist][,1]))
-  
-  d$y_log <- log(d[y][,1])
+  d                      <- data
+  d$dist_log             <- (log(d[dist][,1]))
+  d$y_log                <- log(d[y][,1])
   
   # Model ----------------------------------------------------------------------
   
-  vars <- paste(c("dist_log", x, fe), collapse = " + ")
-  vars2 <- paste(vars)
-  form <- paste("y_log", "~", vars2)
-  form2 <- stats::as.formula(form)
-  
-  model.fe <- stats::lm(form2, data = d)
+  vars                   <- paste(c("dist_log", x, fe), collapse = " + ")
+  vars2                  <- paste(vars)
+  form                   <- paste("y_log", "~", vars2)
+  form2                  <- stats::as.formula(form)
+  model.fe               <- stats::lm(form2, data = d)
 
   # Return ---------------------------------------------------------------------
   
-    return.object.1 <- .robustsummary.lm(model.fe, robust=vce_robust)
+    return.object.1      <- .robustsummary.lm(model.fe, robust=vce_robust)
     return.object.1$call <- form2
     return(return.object.1)
 }

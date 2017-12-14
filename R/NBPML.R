@@ -5,7 +5,8 @@
 #' 
 #' @details \code{NBPML} is an estimation method for gravity models
 #' belonging to generalized linear models.
-#' It is estimated via \code{\link[MASS]{glm.nb}}  using the negative binomial distribution and a log-link.
+#' It is estimated via \code{\link[MASS]{glm.nb}}  
+#' using the negative binomial distribution and a log-link.
 #' To execute the function a square gravity dataset with all pairs of 
 #' countries, ISO-codes for the country of origin and destination, a measure of 
 #' distance between the bilateral partners as well as all 
@@ -113,16 +114,35 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' # Example for data with zero trade flows
+#' data(Gravity_zeros)
 #' 
-#' Gravity$lgdp_o <- log(Gravity$gdp_o)
-#' Gravity$lgdp_d <- log(Gravity$gdp_d)
+#' NBPML(y="flow", dist="distw", x=c("rta","iso_o","iso_d"), 
+#' vce_robust=TRUE, data=Gravity_zeros)
 #' 
-#' NBPML(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' # Example for data without zero trade flows
+#' data(Gravity_no_zeros)
 #' 
-#' NBPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' Gravity_no_zeros$lgdp_o <- log(Gravity_no_zeros$gdp_o)
+#' Gravity_no_zeros$lgdp_d <- log(Gravity_no_zeros$gdp_d)
+#' 
+#' NBPML(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), 
+#' vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_zeros)
+#' Gravity_zeros$lgdp_o <- log(Gravity_zeros$gdp_o)
+#' Gravity_zeros$lgdp_d <- log(Gravity_zeros$gdp_d)
+#' 
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen_zeros <- names(sort(table(Gravity_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small_zeros <- Gravity_zeros[Gravity_zeros$iso_o %in% countries_chosen_zeros,]
+#' NBPML(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), vce_robust=TRUE, data=grav_small_zeros)
 #' }
 #' 
 #' @return
@@ -132,28 +152,27 @@
 #' @seealso \code{\link[MASS]{glm.nb}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' 
 #' @export 
 #' 
 NBPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+  
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
   if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
-  
+ 
   # Transforming data, logging flows, distances --------------------------------
   
-  d          <- data
-  d$dist_log <- (log(d[dist][,1]))
-  d$y        <- d[y][,1] 
+  d                  <- data
+  d$dist_log         <- (log(d[dist][,1]))
+  d$y                <- d[y][,1] 
   
   # Model ----------------------------------------------------------------------
   
-  vars              <- paste(c("dist_log", x), collapse=" + ")
-  form              <- paste("y", "~",vars)
-  form2             <- stats::as.formula(form)
+  vars               <- paste(c("dist_log", x), collapse=" + ")
+  form               <- paste("y", "~",vars)
+  form2              <- stats::as.formula(form)
   model.NBPML        <- MASS::glm.nb(form2, data = d, link = "log")
   model.NBPML.robust <- lmtest::coeftest(model.NBPML, vcov=sandwich::vcovHC(model.NBPML, "HC1"))
   
@@ -162,17 +181,16 @@ NBPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
   if(vce_robust == TRUE){
     summary.NBPML.1                <- .robustsummary.lm(model.NBPML, robust=TRUE)
     summary.NBPML.1$coefficients   <- model.NBPML.robust[1:length(rownames(model.NBPML.robust)),]
-    return.object.1               <- summary.NBPML.1
-    return.object.1$call          <- form2
-    return.object.1$r.squared     <- NULL 
-    return.object.1$adj.r.squared <- NULL
-    return.object.1$fstatistic    <- NULL
+    return.object.1                <- summary.NBPML.1
+    return.object.1$call           <- form2
+    return.object.1$r.squared      <- NULL 
+    return.object.1$adj.r.squared  <- NULL
+    return.object.1$fstatistic     <- NULL
     return(return.object.1)
   }
   
   if(vce_robust == FALSE){
-    return.object.1               <- summary(model.NBPML)
-    return.object.1$call          <- form2
+    return.object.1                <- summary(model.NBPML)
+    return.object.1$call           <- form2
     return(return.object.1)}
-  
 }

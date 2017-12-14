@@ -117,16 +117,28 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' data(Gravity_no_zeros)
 #' 
-#' Gravity$lgdp_o <- log(Gravity$gdp_o)
-#' Gravity$lgdp_d <- log(Gravity$gdp_d)
+#' Gravity_no_zeros$lgdp_o <- log(Gravity_no_zeros$gdp_o)
+#' Gravity_no_zeros$lgdp_d <- log(Gravity_no_zeros$gdp_d)
 #' 
 #' GPML(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' vce_robust=TRUE, data=Gravity_no_zeros)
 #' 
 #' GPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o %in% countries_chosen,]
+#' GPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), vce_robust=TRUE, data=grav_small)
 #' }
 #' 
 #' @return
@@ -140,26 +152,25 @@
 #' @export 
 #' 
 GPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+  
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
   if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
-  
+ 
   # Transforming data, logging flows, distances --------------------------------
   
-  d          <- data
-  d$dist_log <- (log(d[dist][,1]))
-  d$y        <- d[y][,1] 
+  d                  <- data
+  d$dist_log         <- (log(d[dist][,1]))
+  d$y                <- d[y][,1] 
   
   # Model ----------------------------------------------------------------------
   
-  vars              <- paste(c("dist_log", x), collapse=" + ")
-  form              <- paste("y", "~",vars)
-  form2             <- stats::as.formula(form)
-  model.GPML         <- glm2::glm2(form2, data = d, family = stats::Gamma(link = "log"), 
-                             control = list(maxit = 200, trace = FALSE)) # maxit default = 25
+  vars               <- paste(c("dist_log", x), collapse=" + ")
+  form               <- paste("y", "~",vars)
+  form2              <- stats::as.formula(form)
+  model.GPML         <- glm2::glm2(form2, data = d, family = stats::Gamma(link = "log"), control = list(maxit = 200, trace = FALSE)) # maxit default = 25
   model.GPML.robust  <- lmtest::coeftest(model.GPML, vcov=sandwich::vcovHC(model.GPML, "HC1"))
   
   # Return --------------------------------------------------------------------- 
@@ -179,5 +190,4 @@ GPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
     return.object.1               <- summary(model.GPML)
     return.object.1$call          <- form2
     return(return.object.1)}
-  
 }

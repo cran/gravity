@@ -127,15 +127,27 @@
 #' 
 #' @examples 
 #' \dontrun{ 
-#' data(Gravity)
+#' data(Gravity_no_zeros)
 #' 
 #' SILS(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", 
 #' maxloop=50, maxloop2=50, dec_places=4, vce_robust=TRUE, verbose=FALSE, 
-#' data=Gravity)
+#' data=Gravity_no_zeros)
 #' 
 #' SILS(y="flow", dist="distw", x=c("rta", "comcur", "contig"), 
 #' inc_o="gdp_o", inc_d="gdp_d", maxloop=50, maxloop2=50, dec_places=4, 
-#' vce_robust=FALSE, verbose=TRUE, data=Gravity)
+#' vce_robust=TRUE, verbose=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(Gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- Gravity_no_zeros[Gravity_no_zeros$iso_o %in% countries_chosen,]
+#' SILS(y="flow", dist="distw", x=c("rta"), inc_o="gdp_o", inc_d="gdp_d", maxloop=50, maxloop2=50, dec_places=4, vce_robust=TRUE, verbose=TRUE, data=grav_small)
 #' }
 #' 
 #' @return
@@ -149,58 +161,49 @@
 #' 
 #' @export 
 #' 
-SILS <- function(y, dist, x, inc_o, inc_d, maxloop=50, maxloop2=50, 
-                 dec_places=4, vce_robust=TRUE, verbose=FALSE, data, ...){
+SILS <- function(y, dist, x, inc_o, inc_d, maxloop=50, maxloop2=50, dec_places=4, vce_robust=TRUE, verbose=FALSE, data, ...){
   
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
+  if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
+
   if(!is.character(inc_d) | !inc_d%in%colnames(data) | length(inc_d)!=1)  stop("'inc_d' must be a character of length 1 and a colname of 'data'")
   if(!is.character(inc_o) | !inc_o%in%colnames(data) | length(inc_o)!=1)  stop("'inc_o' must be a character of length 1 and a colname of 'data'")
-  if(!is.character(x)     | !all(x%in%colnames(data))) stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
   if(maxloop!=round(maxloop) | maxloop2!=round(maxloop2) | maxloop<=0 | maxloop2<=0) stop("'maxloop' and 'maxloop2' have to be integers with values >0")
   
   # checking whether parameters are valid --------------------------------------
   
-  if(maxloop < 1){
-    stop("maxloop has to be an integer greater or equal 1")
-  }
+  if(maxloop < 1)                                                         stop("maxloop has to be an integer greater or equal 1")
+  if(maxloop2 < 1)                                                        stop("maxloop2 has to be an integer greater or equal 1")
+  if(dec_places < 1)                                                      stop("dec_places should equal 1 or a higher number")
   
-  if(maxloop2 < 1){
-    stop("maxloop2 has to be an integer greater or equal 1")
-  }
-  
-  if(dec_places < 1){
-    stop("dec_places should equal 1 or a higher number")
-  }
-  
-  d <- data
-  d$dist_log <- (log(d[dist][,1]))
+  d                <- data
+  d$dist_log       <- (log(d[dist][,1]))
   
   # Setting starting values for the first iteration ----------------------------
   
-  d$P_i <- 1
-  d$P_j <- 1
+  d$P_i            <- 1
+  d$P_j            <- 1
   
-  loop <- 0
-  dec.point <- 1*10^-dec_places
-  beta_dist <- 1
-  beta_dist_old <- 0
-  coef.dist <- 1
+  loop             <- 0
+  dec.point        <- 1*10^-dec_places
+  beta_dist        <- 1
+  beta_dist_old    <- 0
+  coef.dist        <- 1
   
-  beta <- vector(length=length(x))
-  names(beta) <- x
+  beta             <- vector(length=length(x))
+  names(beta)      <- x
   for(j in 1:length(x)){beta[j] <- 1}
-  beta_old <- vector(length=length(x))
-  names(beta_old) <- x
+  beta_old         <- vector(length=length(x))
+  names(beta_old)  <- x
   
   for(j in 1:length(x)){beta_old[j] <- 0}
   
-  coef_x <- data.frame(matrix(nrow=1, ncol=length(x)))
-  coef_x[1,] <- 1
-  names(coef_x) <- x
+  coef_x           <- data.frame(matrix(nrow=1, ncol=length(x)))
+  coef_x[1,]       <- 1
+  names(coef_x)    <- x
   
   # Begin iterations -----------------------------------------------------------
   
@@ -218,13 +221,13 @@ SILS <- function(y, dist, x, inc_o, inc_d, maxloop=50, maxloop2=50,
     costs_a <- data.frame(matrix(nrow=length(d[y][,1]), ncol=length(x)))
     for(j in 1:length(x)){costs_a[,j] <- beta[j] * d[x[j]][,1]}
     costs_b <- apply(X=costs_a, MARGIN=1, FUN=sum)
-    d$t_ij <- exp(beta_dist * d$dist_log + costs_b) 
+    d$t_ij  <- exp(beta_dist * d$dist_log + costs_b) 
     
     # Contraction mapping ------------------------------------------------------
     
     d$P_j_old <- 0
     d$P_i_old <- 0
-    j <- 1
+    j         <- 1
     
     while(j <= maxloop2 & 
           sum(abs(d$P_j - d$P_j_old)) > dec.point & 
@@ -252,26 +255,26 @@ SILS <- function(y, dist, x, inc_o, inc_d, maxloop=50, maxloop2=50,
       
       if(j == maxloop2){
         warning("The inner iteration did not converge before the inner loop reached maxloop2=",maxloop2," iterations")
-        }
-      
       }
+      
+    }
     
     # Model --------------------------------------------------------------------
     
-    vars <- paste(c("dist_log", x), collapse=" + ")
-    form <- paste("log(d[y][,1]) - log((d[inc_o][,1] * d[inc_d][,1]) /
+    vars       <- paste(c("dist_log", x), collapse=" + ")
+    form       <- paste("log(d[y][,1]) - log((d[inc_o][,1] * d[inc_d][,1]) /
                     (d$P_i * d$P_j))","~",vars)
-    form2 <- stats::as.formula(form)
+    form2      <- stats::as.formula(form)
     
     model.SILS <- stats::lm(form2, data = d)
-
+    
     # Updating coefficients ----------------------------------------------------
     
     beta_dist <- stats::coef(model.SILS)[2]
     for(j in 1:length(x)){beta[j] <- stats::coef(model.SILS)[j+2]}
     
     coef.dist <- c(coef.dist, beta_dist)
-    coef_x <- rbind(coef_x, rep(0, times=length(x)))
+    coef_x    <- rbind(coef_x, rep(0, times=length(x)))
     for(j in 1:length(x)){coef_x[x[j]][loop+2,] <- beta[j]}
     
     # Coefficients -------------------------------------------------------------
@@ -295,12 +298,12 @@ SILS <- function(y, dist, x, inc_o, inc_d, maxloop=50, maxloop2=50,
   # Return --------------------------------------------------------------------- 
   
   if(vce_robust == TRUE){
-    return.object.1 <- .robustsummary.lm(model.SILS, robust=TRUE)
+    return.object.1      <- .robustsummary.lm(model.SILS, robust=TRUE)
     return.object.1$call <- form2
     return(return.object.1)}
   
   if(vce_robust == FALSE){
-    return.object.1 <- .robustsummary.lm(model.SILS, robust=FALSE)
+    return.object.1      <- .robustsummary.lm(model.SILS, robust=FALSE)
     return.object.1$call <- form2
     return(return.object.1)}
   

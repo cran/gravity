@@ -30,8 +30,8 @@
   # add extension for robust standard errors
   if(robust==TRUE){ 
     # save variable that are necessary to calcualte robust sd
-    X <- stats::model.matrix(object)
-    u2 <- stats::residuals(object)^2
+    X   <- stats::model.matrix(object)
+    u2  <- stats::residuals(object)^2
     XDX <- 0
     
     ## One needs to calculate X'DX. But due to the fact that
@@ -55,8 +55,8 @@
   }
   # add extension for clustered standard errors
   
-  z <- object
-  p <- z$rank
+  z   <- object
+  p   <- z$rank
   rdf <- z$df.residual
   if (p == 0) {
     r <- z$residuals
@@ -67,14 +67,14 @@
     }
     else {
       rss <- sum(w * r^2)
-      r <- sqrt(w) * r
+      r   <- sqrt(w) * r
     }
-    resvar <- rss/rdf
-    ans <- z[c("call", "terms", if (!is.null(z$weights)) "weights")]
-    class(ans) <- "summary.lm"
-    ans$aliased <- is.na(stats::coef(object))
-    ans$residuals <- r
-    ans$df <- c(0L, n, length(ans$aliased))
+    resvar           <- rss/rdf
+    ans              <- z[c("call", "terms", if (!is.null(z$weights)) "weights")]
+    class(ans)       <- "summary.lm"
+    ans$aliased      <- is.na(stats::coef(object))
+    ans$residuals    <- r
+    ans$df           <- c(0L, n, length(ans$aliased))
     ans$coefficients <- matrix(NA, 0L, 4L)
     dimnames(ans$coefficients) <- list(
       NULL, c("Estimate", "Std. Error", "t value", "Pr(>|t|)"))
@@ -87,7 +87,7 @@
   if (!inherits(object, "lm")) 
     warning("calling summary.lm(<fake-lm-object>) ...")
   Qr <- qr.lm(object)
-  n <- NROW(Qr$qr)
+  n  <- NROW(Qr$qr)
   if (is.na(z$df.residual) || n - p != z$df.residual) 
     warning("residual degrees of freedom in object suggest this is not an \"lm\" fit")
   r <- z$residuals
@@ -106,38 +106,37 @@
     }
     else sum(w * f^2)
     rss <- sum(w * r^2)
-    r <- sqrt(w) * r
+    r   <- sqrt(w) * r
   }
   resvar <- rss/rdf
   if (is.finite(resvar) && resvar < (mean(f)^2 + stats::var(f)) * 
       1e-30) 
     warning("essentially perfect fit: summary may be unreliable")
   p1 <- 1L:p
-  R <- chol2inv(Qr$qr[p1, p1, drop = FALSE])
+  R  <- chol2inv(Qr$qr[p1, p1, drop = FALSE])
   se <- sqrt(diag(R) * resvar)
   
   if(robust==T) se <- rstdh
   
-  est <- z$coefficients[Qr$pivot[p1]]
+  est  <- z$coefficients[Qr$pivot[p1]]
   tval <- est/se
-  ans <- z[c("call", "terms", if (!is.null(z$weights)) "weights")]
+  ans  <- z[c("call", "terms", if (!is.null(z$weights)) "weights")]
   ans$residuals <- r
-  pval <- 2 * stats::pt(abs(tval), 
-                        rdf, lower.tail = FALSE)
+  pval <- 2 * stats::pt(abs(tval), rdf, lower.tail = FALSE)
   ans$coefficients <- cbind(est, se, tval, pval)
   dimnames(ans$coefficients) <- list(names(z$coefficients)[Qr$pivot[p1]], 
                                      c("Estimate", "Std. Error", "t value", "Pr(>|t|)"))
   ans$aliased <- is.na(stats::coef(object))
-  ans$sigma <- sqrt(resvar)
-  ans$df <- c(p, rdf, NCOL(Qr$qr))
+  ans$sigma   <- sqrt(resvar)
+  ans$df      <- c(p, rdf, NCOL(Qr$qr))
   if (p != attr(z$terms, "intercept")) {
     df.int <- if (attr(z$terms, "intercept")) 
       1L
     else 0L
-    ans$r.squared <- mss/(mss + rss)
+    ans$r.squared     <- mss/(mss + rss)
     ans$adj.r.squared <- 1 - (1 - ans$r.squared) * ((n - 
                                                        df.int)/rdf)
-    ans$fstatistic <- c(value = (mss/(p - df.int))/resvar, 
+    ans$fstatistic    <- c(value = (mss/(p - df.int))/resvar, 
                         numdf = p - df.int, dendf = rdf)
     if(robust==T){
       if(df.int == 0){

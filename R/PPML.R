@@ -126,16 +126,35 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' # Example for data with zero trade flows
+#' data(Gravity_zeros)
 #' 
-#' Gravity$lgdp_o <- log(Gravity$gdp_o)
-#' Gravity$lgdp_d <- log(Gravity$gdp_d)
+#' PPML(y="flow", dist="distw", x=c("rta","iso_o","iso_d"), 
+#' vce_robust=TRUE, data=Gravity_zeros)
 #' 
-#' PPML(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' # Example for data without zero trade flows
+#' data(Gravity_no_zeros)
 #' 
-#' PPML(y="flow", dist="distw", x=c("rta", "iso_o", "iso_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' Gravity_no_zeros$lgdp_o <- log(Gravity_no_zeros$gdp_o)
+#' Gravity_no_zeros$lgdp_d <- log(Gravity_no_zeros$gdp_d)
+#' 
+#' PPML(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), 
+#' vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_zeros)
+#' Gravity_zeros$lgdp_o <- log(Gravity_zeros$gdp_o)
+#' Gravity_zeros$lgdp_d <- log(Gravity_zeros$gdp_d)
+#' 
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen_zeros <- names(sort(table(Gravity_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small_zeros <- Gravity_zeros[Gravity_zeros$iso_o %in% countries_chosen_zeros,]
+#' PPML(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), vce_robust=TRUE, data=grav_small_zeros)
 #' }
 #' 
 #' @return
@@ -149,18 +168,18 @@
 #' @export 
 #' 
 PPML <- function(y, dist, x, vce_robust=TRUE, data, ...){
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
   if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
-  
+ 
   # Transforming data, logging flows, distances --------------------------------
   
-  d          <- data
-  d$dist_log <- (log(d[dist][,1]))
-  d$y        <- d[y][,1] 
+  d                 <- data
+  d$dist_log        <- (log(d[dist][,1]))
+  d$y               <- d[y][,1] 
 
   # Model ----------------------------------------------------------------------
   

@@ -8,7 +8,7 @@
 #' It is estimated via \code{\link[stats]{glm}} using the gaussian distribution and a log-link.
 #' As the method may not lead to convergence when poor
 #' starting values are used, the linear predictions, fitted values,
-#' and estimated coeffitients resulting from a 
+#' and estimated coefficients resulting from a 
 #' \code{\link[gravity]{PPML}} estimation are used for the arguments 
 #' \code{etastart}, \code{mustart}, and \code{start}.
 #' To execute the function a square gravity dataset with all pairs of 
@@ -16,7 +16,6 @@
 #' distance between the bilateral partners as well as all 
 #' information that should be considered as dependent an independent 
 #' variables is needed. 
-#' Make sure the ISO-codes are of type "character".
 #' Missing bilateral flows as well as incomplete rows should be 
 #' excluded from the dataset.  
 #' Zero trade flows are allowed.
@@ -118,13 +117,38 @@
 #' 
 #' @examples 
 #' \dontrun{
-#' data(Gravity)
+#' # Example for data with zero trade flows
+#' data(Gravity_zeros)
 #' 
-#' Gravity$lgdp_o <- log(Gravity$gdp_o)
-#' Gravity$lgdp_d <- log(Gravity$gdp_d)
+#' Gravity_zeros$lgdp_o <- log(Gravity_zeros$gdp_o)
+#' Gravity_zeros$lgdp_d <- log(Gravity_zeros$gdp_d)
 #' 
-#' NLS(y="flow", dist="distw", x=c("rta", "lgdp_o", "lgdp_d"), 
-#' vce_robust=TRUE, data=Gravity)
+#' NLS(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), 
+#' vce_robust=TRUE, data=Gravity_zeros)
+#' 
+#' # Example for data without zero trade flows
+#' data(Gravity_no_zeros)
+#' 
+#' Gravity_no_zeros$lgdp_o <- log(Gravity_no_zeros$gdp_o)
+#' Gravity_no_zeros$lgdp_d <- log(Gravity_no_zeros$gdp_d)
+#' 
+#' NLS(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), 
+#' vce_robust=TRUE, data=Gravity_no_zeros)
+#' }
+#' 
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#' 
+#' data(Gravity_zeros)
+#' Gravity_zeros$lgdp_o <- log(Gravity_zeros$gdp_o)
+#' Gravity_zeros$lgdp_d <- log(Gravity_zeros$gdp_d)
+#' 
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen_zeros <- names(sort(table(Gravity_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small_zeros <- Gravity_zeros[Gravity_zeros$iso_o %in% countries_chosen_zeros,]
+#' NLS(y="flow", dist="distw", x=c("rta","lgdp_o","lgdp_d"), vce_robust=TRUE, data=grav_small_zeros)
 #' }
 #' 
 #' @return
@@ -134,48 +158,46 @@
 #' @seealso \code{\link[stats]{glm}}, \code{\link[lmtest]{coeftest}}, 
 #' \code{\link[sandwich]{vcovHC}}
 #' 
-#' 
 #' @export 
-#' 
 NLS <- function(y, dist, x, vce_robust=TRUE, data, ...){
-  if(!is.data.frame(data))stop("'data' must be a 'data.frame'")
-  if((vce_robust %in% c(TRUE, FALSE)) == FALSE){
-    stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")}
+  
+  if(!is.data.frame(data))                                                stop("'data' must be a 'data.frame'")
+  if((vce_robust %in% c(TRUE, FALSE)) == FALSE)                           stop("'vce_robust' has to be either 'TRUE' or 'FALSE'")
   if(!is.character(y)     | !y%in%colnames(data)     | length(y)!=1)      stop("'y' must be a character of length 1 and a colname of 'data'")
   if(!is.character(dist)  | !dist%in%colnames(data)  | length(dist)!=1)   stop("'dist' must be a character of length 1 and a colname of 'data'")
   if(!is.character(x)     | !all(x%in%colnames(data)))                    stop("'x' must be a character vector and all x's have to be colnames of 'data'")  
-  
+
   # Transforming data, logging flows, distances --------------------------------
   
-  d          <- data
-  d$dist_log <- (log(d[dist][,1]))
-  d$y        <- d[y][,1] 
+  d                 <- data
+  d$dist_log        <- (log(d[dist][,1]))
+  d$y               <- d[y][,1] 
   
   # Model ----------------------------------------------------------------------
   
   vars              <- paste(c("dist_log", x), collapse=" + ")
   form              <- paste("y", "~",vars)
   form2             <- stats::as.formula(form)
-
+  
   # For NLS the starting values are retrieved from the resuts of PPML
   model.PPML        <- stats::glm(form2, data = d, family = stats::quasipoisson(link = "log"))
   model.PPML.eta    <- model.PPML$linear.predictors
   model.PPML.mu     <- model.PPML$fitted.values
   model.PPML.start  <- model.PPML$coefficients
   
-  model.NLS        <- glm(form2, data = d, family = stats::gaussian(link = "log"), 
-                          control = list(maxit = 200, trace = FALSE),
-                          etastart = model.PPML.eta, # linear predictors
-                          mustart = model.PPML.mu, # fitted values
-                          start = model.PPML.start) # estimated coefficients
+  model.NLS         <- glm(form2, data = d, family = stats::gaussian(link = "log"), 
+                           control = list(maxit = 200, trace = FALSE),
+                           etastart = model.PPML.eta, # linear predictors
+                           mustart = model.PPML.mu, # fitted values
+                           start = model.PPML.start) # estimated coefficients
   
-  model.NLS.robust <- lmtest::coeftest(model.NLS, vcov=sandwich::vcovHC(model.NLS, "HC1"))
+  model.NLS.robust  <- lmtest::coeftest(model.NLS, vcov=sandwich::vcovHC(model.NLS, "HC1"))
   
   # Return --------------------------------------------------------------------- 
   
   if(vce_robust == TRUE){
-    summary.NLS.1                <- .robustsummary.lm(model.NLS, robust=TRUE)
-    summary.NLS.1$coefficients   <- model.NLS.robust[1:length(rownames(model.NLS.robust)),]
+    summary.NLS.1                 <- .robustsummary.lm(model.NLS, robust=TRUE)
+    summary.NLS.1$coefficients    <- model.NLS.robust[1:length(rownames(model.NLS.robust)),]
     return.object.1               <- summary.NLS.1
     return.object.1$call          <- form2
     return.object.1$r.squared     <- NULL 
@@ -188,5 +210,4 @@ NLS <- function(y, dist, x, vce_robust=TRUE, data, ...){
     return.object.1               <- summary(model.NLS)
     return.object.1$call          <- form2
     return(return.object.1)}
-  
 }
