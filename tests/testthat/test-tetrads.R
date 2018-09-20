@@ -1,0 +1,18 @@
+context("test-gravity.R")
+
+test_that("Tetrads returns a valid output", {
+  # fit model with example dataset
+  data("gravity_no_zeros")
+  countries_chosen <- names(sort(table(gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+  grav_small <- gravity_no_zeros[gravity_no_zeros$iso_o %in% countries_chosen, ]
+
+  fit <- tetrads(
+    dependent_variable = "flow", regressors = c("distw", "rta", "comcur", "contig"),
+    codes = c("iso_o", "iso_d"), reference_countries = c(countries_chosen[1], countries_chosen[2]),
+    multiway = FALSE, data = grav_small
+  )
+
+  expect_is(fit, "summary.lm")
+  expect_is(fit$coefficients, "matrix")
+  expect_output(str(fit), "List of 11")
+})

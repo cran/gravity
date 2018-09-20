@@ -1,0 +1,219 @@
+#' @title Gamma Pseudo Maximum Likelihood (GPML)
+#'
+#' @description \code{gpml} estimates gravity models in their
+#' multiplicative form via Gamma Pseudo Maximum Likelihood.
+#'
+#' @details \code{gpml} is an estimation method for gravity models
+#' belonging to generalized linear models.
+#'
+#' It is estimated via \code{\link[glm2]{glm2}} using the gamma distribution and a log-link.
+#'
+#' For similar functions, utilizing the multiplicative form via the log-link,
+#' but different distributions, see \code{\link[gravity]{ppml}}, \code{\link[gravity]{nls}}, and \code{\link[gravity]{nbpml}}.
+#'
+#' \code{gpml} estimation can be used for both, cross-sectional as well as
+#' panel data.
+#'
+#' It is up to the user to ensure that the functions can be applied
+#' to panel data.
+#'
+#' Depending on the panel dataset and the variables -
+#' specifically the type of fixed effects -
+#' included in the model, it may easily occur that the model is not computable.
+#'
+#' Also, note that by including bilateral fixed effects such as country-pair
+#' effects, the coefficients of time-invariant observables such as distance
+#' can no longer be estimated.
+#'
+#' Depending on the specific model, the code of the
+#' respective function may has to be changed in order to exclude the distance
+#' variable from the estimation.
+#'
+#' At the very least, the user should take special
+#' care with respect to the meaning of the estimated coefficients and variances
+#' as well as the decision about which effects to include in the estimation.
+#'
+#' When using panel data, the parameter and variance estimation of the models
+#' may have to be changed accordingly.
+#'
+#' For a comprehensive overview of gravity models for panel data
+#' see \insertCite{Egger2003;textual}{gravity}, \insertCite{Gomez-Herrera2013;textual}{gravity} and
+#' \insertCite{Head2010;textual}{gravity} as well as the references therein.
+#'
+#' @param dependent_variable name (type: character) of the dependent variable in the dataset
+#' \code{data} (e.g. trade flows).
+#'
+#' @param regressors name (type: character) of the regressors to include in the model.
+#'
+#' Include the distance variable in the dataset \code{data} containing a measure of
+#' distance between all pairs of bilateral partners and bilateral variables that should
+#' be taken as the independent variables in the estimation.
+#'
+#' The distance is logged automatically when the function is executed.
+#'
+#' Unilateral metric variables such as GDPs can be added but those variables have to be logged first.
+#'
+#' Interaction terms can be added.
+#'
+#' Write this argument as \code{c(distance, contiguity, common curreny, ...)}.
+#'
+#' @param robust robust (type: logical) determines whether a robust
+#' variance-covariance matrix should be used. By default is set to \code{TRUE}.
+#'
+#' @param data name of the dataset to be used (type: character).
+#'
+#' To estimate gravity equations you need a square dataset including bilateral
+#' flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
+#' (e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
+#' destination country), a distance measure defined by the argument \code{distance}
+#' and other potential influences (e.g. contiguity and common currency) given as a vector in
+#' \code{regressors} are required.
+#'
+#' All dummy variables should be of type numeric (0/1).
+#'
+#' Make sure the ISO codes are of type "character".
+#'
+#' If an independent variable is defined as a ratio, it should be logged.
+#'
+#' The user should perform some data cleaning beforehand to remove observations that contain entries that
+#' can distort estimates.
+#'
+#' When using panel data, a variable for the time may be included in the
+#' dataset. Note that the variable for the time dimension should be of
+#' type factor.
+#'
+#' The function will remove zero flows and distances.
+#'
+#' @param ... additional arguments to be passed to functions used by
+#' \code{gpml}.
+#'
+#' @references
+#' For more information on the estimation of gravity equations via Gamma
+#' Pseudo maximum Likelihood see
+#'
+#' Santos-Silva, J. M. C. and Tenreyro, S. (2006) <DOI:10.1162/rest.88.4.641>
+#'
+#' For more information on gravity models, theoretical foundations and
+#' estimation methods in general see
+#'
+#' \insertRef{Anderson1979}{gravity}
+#'
+#' \insertRef{Anderson2001}{gravity}
+#'
+#' \insertRef{Anderson2010}{gravity}
+#'
+#' \insertRef{Baier2009}{gravity}
+#'
+#' \insertRef{Baier2010}{gravity}
+#'
+#' \insertRef{Head2010}{gravity}
+#'
+#' \insertRef{Head2014}{gravity}
+#'
+#' \insertRef{Santos2006}{gravity}
+#'
+#' and the citations therein.
+#'
+#' See \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook} for gravity datasets and Stata code for estimating gravity models.
+#'
+#' For estimating gravity equations using panel data see
+#'
+#' \insertRef{Egger2003}{gravity}
+#'
+#' \insertRef{Gomez-Herrera2013}{gravity}
+#'
+#' and the references therein.
+#'
+#' @examples
+#' \dontrun{
+#' data(gravity_no_zeros)
+#'
+#' gravity_no_zeros <- gravity_no_zeros %>%
+#'    mutate(
+#'      lgdp_o = log(gdp_o),
+#'      lgdp_d = log(gdp_d)
+#'    )
+#'
+#' gpml(dependent_variable = "flow", regressors = c("distw", "rta", "lgdp_o", "lgdp_d"),
+#' robust = TRUE, data = gravity_no_zeros)
+#' }
+#'
+#' \dontshow{
+#' # examples for CRAN checks:
+#' # executable in < 5 sec together with the examples above
+#' # not shown to users
+#'
+#' data(gravity_no_zeros)
+#' # choose exemplarily 10 biggest countries for check data
+#' countries_chosen <- names(sort(table(gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
+#' grav_small <- gravity_no_zeros[gravity_no_zeros$iso_o %in% countries_chosen,]
+#' gpml(dependent_variable = "flow",  regressors = c("distw", "rta", "iso_o", "iso_d"),
+#'     robust = TRUE, data = grav_small)
+#' }
+#'
+#' @return
+#' The function returns the summary of the estimated gravity model similar to a
+#' \code{\link[stats]{glm}}-object.
+#'
+#' @seealso \code{\link[glm2]{glm2}}, \code{\link[lmtest]{coeftest}},
+#' \code{\link[sandwich]{vcovHC}}
+#'
+#' @export
+
+gpml <- function(dependent_variable, regressors, robust = TRUE, data, ...) {
+  # Checks ------------------------------------------------------------------
+  stopifnot(is.data.frame(data))
+  stopifnot(is.logical(robust))
+  stopifnot(is.character(dependent_variable), dependent_variable %in% colnames(data), length(dependent_variable) == 1)
+  stopifnot(is.character(regressors), all(regressors %in% colnames(data)), length(regressors) > 1)
+
+  # Split input vectors -----------------------------------------------------
+  distance <- regressors[1]
+  additional_regressors <- regressors[-1]
+
+  # Discarding unusable observations ----------------------------------------
+  d <- data %>%
+    filter_at(vars(!!sym(distance)), any_vars(!!sym(distance) > 0)) %>%
+    filter_at(vars(!!sym(distance)), any_vars(is.finite(!!sym(distance)))) %>%
+    filter_at(vars(!!sym(dependent_variable)), any_vars(!!sym(dependent_variable) > 0)) %>%
+    filter_at(vars(!!sym(dependent_variable)), any_vars(is.finite(!!sym(dependent_variable))))
+
+  # Transforming data, logging distances ---------------------------------------
+  d <- d %>%
+    mutate(
+      dist_log = log(!!sym(distance))
+    ) %>%
+    rename(
+      y_gpml = !!sym(dependent_variable)
+    )
+
+  # Model ----------------------------------------------------------------------
+  vars <- paste(c("dist_log", additional_regressors), collapse = " + ")
+  form <- stats::as.formula(paste("y_gpml", "~", vars))
+  model_gpml <- glm2::glm2(form,
+    data = d,
+    family = stats::Gamma(link = "log"),
+    control = list(maxit = 200, trace = FALSE)
+  )
+  model_gpml_robust <- lmtest::coeftest(model_gpml,
+    vcov = sandwich::vcovHC(model_gpml, "HC1")
+  )
+
+  # Return ---------------------------------------------------------------------
+  if (robust == TRUE) {
+    summary_gpml <- robust_summary(model_gpml, robust = TRUE)
+    summary_gpml$coefficients <- model_gpml_robust[1:length(rownames(model_gpml_robust)), ]
+    return_object <- summary_gpml
+    return_object$call <- form
+    return_object$r.squared <- NULL
+    return_object$adj.r.squared <- NULL
+    return_object$fstatistic <- NULL
+    return(return_object)
+  }
+
+  if (robust == FALSE) {
+    return_object <- summary(model_gpml)
+    return_object$call <- form
+    return(return_object)
+  }
+}
