@@ -18,103 +18,67 @@
 #'
 #' As, to our knowledge at the moment, there is no explicit literature covering
 #' the estimation of a gravity equation by \code{sils} using panel data,
-#' we do not recommend to apply this method in this case.
+#' and we do not recommend to apply this method in this case.
 #'
-#' @param dependent_variable name (type: character) of the dependent variable in the dataset
-#' \code{data} (e.g. trade flows).
-#'
-#' This dependent variable is divided by the
-#' product of unilateral incomes (e.g.
-#' GDPs or GNPs of the countries of interest, named \code{inc_o} and \code{inc_d} in the example datasets)
+#' @param dependent_variable (Type: character) name of the dependent variable. This dependent variable is 
+#' divided by the product of unilateral incomes such (i.e. \code{income_origin} and \code{income_destination}) 
 #' and logged afterwards.
 #'
-#' The transformed variable is then used as the dependent variable in the
-#' estimation.
+#' @param distance (Type: character) name of the distance variable that should be taken as the key independent variable 
+#' in the estimation. The distance is logged automatically when the function is executed.
 #'
-#' @param regressors name (type: character) of the regressors to include in the model.
+#' @param additional_regressors (Type: character) names of the additional regressors to include in the model (e.g. a dummy
+#' variable to indicate contiguity). Unilateral metric variables such as GDP should be inserted via the arguments 
+#' \code{income_origin} and \code{income_destination}. As country specific effects are subdued due to demeaning, no further unilateral variables apart from incomes can be added.
 #'
-#' Include the distance variable in the dataset \code{data} containing a measure of
-#' distance between all pairs of bilateral partners and bilateral variables that should
-#' be taken as the independent variables in the estimation.
+#' Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.
 #'
-#' The distance is logged automatically when the function is executed.
+#' @param income_origin (Type: character) origin income variable (e.g. GDP) in the dataset.
 #'
-#' Unilateral metric variables such as GDPs should be inserted via the argument \code{incomes}.
+#' @param income_destination (Type: character) destination income variable (e.g. GDP) in the dataset.
 #'
-#' As country specific effects are subdued due to demeaning, no further unilateral variables
-#' apart from unilateral incomes can be added.
+#' @param code_origin (Type: character) country of origin variable (e.g. ISO-3 country codes). The variables are grouped 
+#' using this parameter.
 #'
-#' Write this argument as \code{c(distance, contiguity, common curreny, ...)}.
+#' @param code_destination (Type: character) country of destination variable (e.g. country ISO-3 codes). The variables are 
+#' grouped using this parameter.
 #'
-#' @param incomes variable name (type: character) of the income of the country of
-#' origin (e.g. \code{inc_o}) and destination (e.g. \code{inc_d}) in the dataset \code{data}.
-#'
-#' The dependent variable \code{dependent_variable} is divided by the product of the incomes.
-#'
-#' Write this argument as \code{c(income origin, income destination)}.
-#'
-#' @param maxloop maximum number of outer loop iterations.
+#' @param maxloop (Type: numeric) maximum number of outer loop iterations.
 #' The default is set to 100. There will be a warning if the iterations
 #' did not converge.
 #'
-#' @param decimal_places number of decimal places that should not change after a new
+#' @param decimal_places (Type: numeric) number of decimal places that should not change after a new
 #' iteration for the estimation to stop. The default is set to 4.
 #'
-#' @param robust robust (type: logic) determines whether a robust
-#' variance-covariance matrix should be used. The default is set to \code{TRUE}.
+#' @param robust (Type: logical) whether robust fitting should be used. By default this is set to \code{FALSE}.
 #'
-#' If set \code{TRUE} the estimation results are consistent with the
-#' Stata code provided at the website
-#' \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
-#' when choosing robust estimation.
-#'
-#' @param verbose (type: logic) determines whether the estimated coefficients
+#' @param verbose (Type: logical) determines whether the estimated coefficients
 #' of each iteration should be printed in the console. The default is set
 #' to \code{FALSE}.
 #'
-#' @param data name of the dataset to be used (type: character).
+#' @param data (Type: data.frame) the dataset to be used.
 #'
-#' To estimate gravity equations you need a square dataset including bilateral
-#' flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
-#' (e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
-#' destination country), a distance measure defined by the argument \code{distance}
-#' and other potential influences (e.g. contiguity and common currency) given as a vector in
-#' \code{regressors} are required.
-#'
-#' All dummy variables should be of type numeric (0/1).
-#'
-#' Make sure the ISO codes are of type "character".
-#'
-#' If an independent variable is defined as a ratio, it should be logged.
-#'
-#' The user should perform some data cleaning beforehand to remove observations that contain entries that
-#' can distort estimates.
-#'
-#' The function will remove zero flows and distances.
-#'
-#' @param ... additional arguments to be passed to functions used by
-#' \code{sils}.
+#' @param ... Additional arguments to be passed to the function.
 #'
 #' @references
-#' For information on \code{sils} as well as more information on gravity
-#' models, theoretical foundations and suitable estimation methods in general see
-#'
-#' \insertRef{Head2014}{gravity}
-#'
-#' \insertRef{Anderson2001}{gravity}
-#'
 #' For more information on gravity models, theoretical foundations and
 #' estimation methods in general see
 #'
 #' \insertRef{Anderson1979}{gravity}
+#'
+#' \insertRef{Anderson2001}{gravity}
 #'
 #' \insertRef{Anderson2010}{gravity}
 #'
 #' \insertRef{Baier2009}{gravity}
 #'
 #' \insertRef{Baier2010}{gravity}
+#' 
+#' \insertRef{Feenstra2002}{gravity}
 #'
 #' \insertRef{Head2010}{gravity}
+#'
+#' \insertRef{Head2014}{gravity}
 #'
 #' \insertRef{Santos2006}{gravity}
 #'
@@ -122,34 +86,38 @@
 #'
 #' See \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook} for gravity datasets and Stata code for estimating gravity models.
 #'
+#' For estimating gravity equations using panel data see
+#'
+#' \insertRef{Egger2003}{gravity}
+#'
+#' \insertRef{Gomez-Herrera2013}{gravity}
+#'
+#' and the references therein.
+#'
 #' @examples
-#' \dontrun{
-#' data(gravity_no_zeros)
-#'
-#' sils(dependent_variable = "flow", regressors = c("distw", "rta"),
-#' incomes = c("gdp_o", "gdp_d"),
-#' maxloop = 100, dec_places = 4, robust = TRUE, verbose = FALSE,
-#' data = gravity_no_zeros)
-#'
-#' sils(dependent_variable = "flow", regressors = c("distw", "rta", "comcur", "contig"),
-#' incomes = c("gdp_o", "gdp_d"),
-#' maxloop = 100, dec_places = 4, robust = TRUE, verbose = FALSE,
-#' data = gravity_no_zeros)
-#' }
-#'
-#' \dontshow{
-#' # examples for CRAN checks:
-#' # executable in < 5 sec together with the examples above
-#' # not shown to users
-#'
-#' data(gravity_no_zeros)
-#' # choose exemplarily 10 biggest countries for check data
-#' countries_chosen <- names(sort(table(gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
-#' grav_small <- gravity_no_zeros[gravity_no_zeros$iso_o %in% countries_chosen,]
-#' sils(dependent_variable = "flow", regressors = c("distw", "rta"),
-#' incomes = c("gdp_o", "gdp_d"), maxloop = 100,
-#' dec_places = 4, robust = TRUE, verbose = TRUE, data = grav_small)
-#' }
+#' # Example for CRAN checks:
+#' # Executable in < 5 sec
+#' library(dplyr)
+#' data("gravity_no_zeros")
+#' 
+#' # Choose 5 countries for testing
+#' countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+#' grav_small <- filter(gravity_no_zeros, iso_o %in% countries_chosen)
+#' 
+#' fit <- sils(
+#'   dependent_variable = "flow",
+#'   distance = "distw",
+#'   additional_regressors = "rta",
+#'   income_origin = "gdp_o",
+#'   income_destination = "gdp_d",
+#'   code_origin = "iso_o",
+#'   code_destination = "iso_d",
+#'   maxloop = 50,
+#'   dec_places = 3,
+#'   robust = FALSE,
+#'   verbose = FALSE,
+#'   data = grav_small
+#' )
 #'
 #' @return
 #' The function returns the summary of the estimated gravity model as an
@@ -161,22 +129,42 @@
 #'
 #' @export
 #'
-sils <- function(dependent_variable, regressors, incomes, maxloop=50, decimal_places=4, robust=TRUE, verbose=FALSE, data, ...) {
+sils <- function(dependent_variable,
+                 distance,
+                 additional_regressors = NULL,
+                 income_origin,
+                 income_destination,
+                 code_origin,
+                 code_destination,
+                 maxloop = 100,
+                 decimal_places = 4,
+                 robust = FALSE,
+                 verbose = FALSE,
+                 data, ...) {
   # Checks ------------------------------------------------------------------
   stopifnot(is.data.frame(data))
   stopifnot(is.logical(robust))
+
   stopifnot(is.character(dependent_variable), dependent_variable %in% colnames(data), length(dependent_variable) == 1)
-  stopifnot(is.character(regressors), all(regressors %in% colnames(data)), length(regressors) > 1)
-  stopifnot(is.character(incomes) | all(incomes %in% colnames(data)) | length(incomes) == 2)
+
+  stopifnot(is.character(distance), distance %in% colnames(data), length(distance) == 1)
+
+  if (!is.null(additional_regressors)) {
+    stopifnot(is.character(additional_regressors), all(additional_regressors %in% colnames(data)))
+  }
+
+  stopifnot(is.character(income_origin), income_origin %in% colnames(data), length(income_origin) == 1)
+  stopifnot(is.character(income_destination), income_destination %in% colnames(data), length(income_destination) == 1)
+
+  valid_origin <- data %>% select(code_origin) %>% distinct() %>% as_vector()
+  valid_destination <- data %>% select(code_destination) %>% distinct() %>% as_vector()
+  
+  stopifnot(is.character(code_origin), code_origin %in% colnames(data), length(code_origin) == 1)
+  stopifnot(is.character(code_destination), code_destination %in% colnames(data), length(code_destination) == 1)
+  
   stopifnot(maxloop > 0)
+
   stopifnot(decimal_places >= 1)
-
-  # Split input vectors -----------------------------------------------------
-  inc_o <- incomes[1]
-  inc_d <- incomes[2]
-
-  distance <- regressors[1]
-  additional_regressors <- regressors[-1]
 
   # Discarding unusable observations ----------------------------------------
   d <- data %>%
@@ -206,9 +194,11 @@ sils <- function(dependent_variable, regressors, incomes, maxloop=50, decimal_pl
 
   beta <- vector(length = length(additional_regressors))
   names(beta) <- additional_regressors
+
   for (j in 1:length(additional_regressors)) {
     beta[j] <- 1
   }
+
   beta_old <- vector(length = length(additional_regressors))
   names(beta_old) <- additional_regressors
 
@@ -266,16 +256,16 @@ sils <- function(dependent_variable, regressors, incomes, maxloop=50, decimal_pl
 
       # Inward MR --------------------------------------------------------------
       d <- d %>%
-        group_by(!!sym("iso_d")) %>%
+        group_by(!!sym(code_destination)) %>%
         mutate(
-          P_j = sum(!!sym("t_ij") * !!sym(inc_o) / !!sym("P_i"))
+          P_j = sum(!!sym("t_ij") * !!sym(income_origin) / !!sym("P_i"))
         )
 
       # Outward MR -------------------------------------------------------------
       d <- d %>%
-        group_by(!!sym("iso_o")) %>%
+        group_by(!!sym(code_origin)) %>%
         mutate(
-          P_i = sum(!!sym("t_ij") * !!sym(inc_d) / !!sym("P_j"))
+          P_i = sum(!!sym("t_ij") * !!sym(income_destination) / !!sym("P_j"))
         )
 
       j <- j + 1
@@ -289,13 +279,22 @@ sils <- function(dependent_variable, regressors, incomes, maxloop=50, decimal_pl
     d <- d %>%
       mutate(
         y_log_sils = log(!!sym(dependent_variable)) -
-          log((!!sym(inc_o) * !!sym(inc_d)) / (!!sym("P_i") * !!sym("P_j")))
+          log((!!sym(income_origin) * !!sym(income_destination)) / (!!sym("P_i") * !!sym("P_j")))
       )
 
-    vars <- paste(c("dist_log", additional_regressors), collapse = " + ")
+    if (!is.null(additional_regressors)) {
+      vars <- paste(c("dist_log", additional_regressors), collapse = " + ")
+    } else {
+      vars <- "dist_log"
+    }
+    
     form <- stats::as.formula(paste("y_log_sils", "~", vars))
 
-    model_sils <- stats::lm(form, data = d)
+    if (robust == TRUE) {
+      model_sils <- MASS::rlm(form, data = d)
+    } else {
+      model_sils <- stats::lm(form, data = d)
+    }
 
     # Updating coefficients ----------------------------------------------------
     beta_distance <- stats::coef(model_sils)[2]
@@ -305,6 +304,7 @@ sils <- function(dependent_variable, regressors, incomes, maxloop=50, decimal_pl
 
     coef_dist <- c(coef_dist, beta_distance)
     coef_additional_regressors <- rbind(coef_additional_regressors, rep(0, times = length(additional_regressors)))
+
     for (j in 1:length(additional_regressors)) {
       coef_additional_regressors[additional_regressors[j]][loop + 2, ] <- beta[j]
     }
@@ -327,16 +327,6 @@ sils <- function(dependent_variable, regressors, incomes, maxloop=50, decimal_pl
     }
   }
 
-  # Return ---------------------------------------------------------------------
-  if (robust == TRUE) {
-    return_object <- robust_summary(model_sils, robust = TRUE)
-    return_object$call <- form
-    return(return_object)
-  }
-
-  if (robust == FALSE) {
-    return_object <- robust_summary(model_sils, robust = FALSE)
-    return_object$call <- form
-    return(return_object)
-  }
+  model_sils$call <- form
+  return(model_sils)
 }

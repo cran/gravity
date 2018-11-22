@@ -12,7 +12,7 @@
 
 <meta name="author" content="Mauricio Vargas" />
 
-<meta name="date" content="2018-09-19" />
+<meta name="date" content="2018-11-22" />
 
 <title>Creating gravity datasets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Creating gravity datasets</h1>
 <h4 class="author"><em>Mauricio Vargas</em></h4>
-<h4 class="date"><em>2018-09-19</em></h4>
+<h4 class="date"><em>2018-11-22</em></h4>
 
 
 
@@ -84,61 +84,57 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>In order to have a dataset suited for all functions, a cross-sectional dataset is chosen. All incomplete rows and observations with missing trade flows are therefore excluded from the dataset.</p>
 <p>As some of the functions in the package are capable of handling zero values in trade flows and some are not, two datasets, <code>gravity_zeros</code> and <code>gravity_no_zeros</code>, are provided.</p>
 <p>The original dataset downloaded from <a href="http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip">SciencesPo</a> was edited in the following way:</p>
-<div id="import-and-read-the-dataset" class="section level2">
-<h2>Import and read the dataset</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">url &lt;-<span class="st"> &quot;http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip&quot;</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 1: Import and read the dataset</span>
+
+url &lt;-<span class="st"> &quot;http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip&quot;</span>
 zip &lt;-<span class="st"> &quot;col_regfile09.zip&quot;</span>
 
 <span class="cf">if</span> (<span class="op">!</span><span class="kw">file.exists</span>(zip)) { <span class="kw">try</span>(<span class="kw">download.file</span>(url, zip)) }
 <span class="kw">try</span>(<span class="kw">system</span>(<span class="st">&quot;7z e -aos col_regfile09.zip&quot;</span>))
 
 <span class="kw">library</span>(haven)
-col_regfile09 &lt;-<span class="st"> </span><span class="kw">read_dta</span>(<span class="st">&quot;col_regfile09.dta&quot;</span>)</code></pre></div>
-</div>
-<div id="isolation-of-one-year" class="section level2">
-<h2>Isolation of one year</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
+col_regfile09 &lt;-<span class="st"> </span><span class="kw">read_dta</span>(<span class="st">&quot;col_regfile09.dta&quot;</span>)
+
+<span class="co"># 2: Isolation of one year</span>
+
+<span class="kw">library</span>(dplyr)
 data06 &lt;-<span class="st"> </span>col_regfile09 <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> </span><span class="dv">2006</span>)</code></pre></div>
-</div>
-<div id="choosing-variables-select-columns" class="section level2">
-<h2>Choosing variables (select columns)</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data06 &lt;-<span class="st"> </span>data06 <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(iso_o, iso_d, distw, gdp_o, gdp_d, rta, flow, contig, comlang_off, comcur)</code></pre></div>
-</div>
-<div id="transforming-data" class="section level2">
-<h2>Transforming data</h2>
-<div id="isolation-of-complete-cases" class="section level3">
-<h3>Isolation of complete cases</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tidyr)
+<span class="st">  </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> </span><span class="dv">2006</span>)
+
+<span class="co"># 3: Choosing variables</span>
+
+data06 &lt;-<span class="st"> </span>data06 <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(iso_o, iso_d, distw, gdp_o, gdp_d, rta, flow, contig, comlang_off, comcur)
+
+<span class="co"># 4: Isolation of complete cases</span>
+
+<span class="kw">library</span>(tidyr)
 gravity_zeros &lt;-<span class="st"> </span>data06 <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">drop_na</span>()</code></pre></div>
-</div>
-<div id="divide-gdps-by-1000000-for-scaling-purposes" class="section level3">
-<h3>Divide GDPs by 1,000,000 for scaling purposes</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gravity_zeros &lt;-<span class="st"> </span>gravity_zeros <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">drop_na</span>()
+
+<span class="co"># 5: Divide GDPs by 1,000,000 for scaling purposes</span>
+
+gravity_zeros &lt;-<span class="st"> </span>gravity_zeros <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">mutate</span>(
     <span class="dt">gdp_o =</span> gdp_o <span class="op">/</span><span class="st"> </span><span class="dv">1000000</span>,
     <span class="dt">gdp_d =</span> gdp_d <span class="op">/</span><span class="st"> </span><span class="dv">1000000</span>
-  )</code></pre></div>
-</div>
-<div id="exclusion-of-trade-flows-equal-to-0" class="section level3">
-<h3>Exclusion of trade flows equal to 0</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gravity_no_zeros &lt;-<span class="st"> </span>gravity_zeros <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">filter</span>(flow <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</code></pre></div>
-</div>
-</div>
-<div id="export-the-data" class="section level2">
-<h2>Export the data</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">save</span>(gravity_zeros, <span class="dt">file =</span> <span class="st">&quot;gravity_zeros.rdata&quot;</span>, <span class="dt">compress =</span> <span class="st">&quot;xz&quot;</span>)
+  )
+
+<span class="co"># 6: Exclusion of trade flows equal to 0</span>
+
+gravity_no_zeros &lt;-<span class="st"> </span>gravity_zeros <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(flow <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)
+
+<span class="co"># 7: Export the data</span>
+
+<span class="kw">save</span>(gravity_zeros, <span class="dt">file =</span> <span class="st">&quot;gravity_zeros.rdata&quot;</span>, <span class="dt">compress =</span> <span class="st">&quot;xz&quot;</span>)
 <span class="kw">save</span>(gravity_no_zeros, <span class="dt">file =</span> <span class="st">&quot;gravity_no_zeros.rdata&quot;</span>, <span class="dt">compress =</span> <span class="st">&quot;xz&quot;</span>)</code></pre></div>
 </div>
-<div id="references" class="section level2 unnumbered">
-<h2>References</h2>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
 <div id="refs" class="references">
 <div id="ref-Head2010">
 <p>Head, Keith, Thierry Mayer, and John Ries. 2010. “The Erosion of Colonial Trade Linkages After Independence.” <em>Journal of International Economics</em> 81 (1): 1–14. doi:<a href="https://doi.org/10.1016/j.jinteco.2010.01.002">10.1016/j.jinteco.2010.01.002</a>.</p>
-</div>
 </div>
 </div>
 </div>

@@ -4,72 +4,33 @@
 \alias{fixed_effects}
 \title{Fixed Effects}
 \usage{
-fixed_effects(dependent_variable, regressors, codes = c("iso_o", "iso_d"),
-  robust = TRUE, data, ...)
+fixed_effects(dependent_variable, distance, additional_regressors = NULL,
+  code_origin, code_destination, robust = FALSE, data, ...)
 }
 \arguments{
-\item{dependent_variable}{name (type: character) of the dependent variable in the dataset
-\code{data} (e.g. trade flows).
+\item{dependent_variable}{(Type: character) name of the dependent variable. This variable is logged and then used as 
+the dependent variable in the estimation.}
 
-This variable is logged and then used as the dependent variable in the estimation.}
+\item{distance}{(Type: character) name of the distance variable that should be taken as the key independent variable 
+in the estimation. The distance is logged automatically when the function is executed.}
 
-\item{regressors}{name (type: character) of the regressors to include in the model.
+\item{additional_regressors}{(Type: character) names of the additional regressors to include in the model (e.g. a dummy
+variable to indicate contiguity). Unilateral metric variables such as GDPs can be added but those variables have to be 
+logged first.
 
-Include the distance variable in the dataset \code{data} containing a measure of
-distance between all pairs of bilateral partners and bilateral variables that should
-be taken as the independent variables in the estimation.
+Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.}
 
-The distance is logged automatically when the function is executed.
+\item{code_origin}{(Type: character) country of origin variable (e.g. ISO-3 country codes). The variables are grouped 
+using this parameter.}
 
-Fixed effects catch all unilateral effects. Therefore, no other unilateral variables such as
-GDP can be included as independent variables in the estimation.
+\item{code_destination}{(Type: character) country of destination variable (e.g. country ISO-3 codes). The variables are 
+grouped using this parameter.}
 
-Write this argument as \code{c(distance, contiguity, common curreny, ...)}.}
+\item{robust}{(Type: logical) whether robust fitting should be used. By default this is set to \code{FALSE}.}
 
-\item{codes}{variable name (type: character) of the code of the country
-of origin and destination (e.g. ISO-3 codes from the variables \code{iso_o} and \code{iso_d}) in the
-example datasets).
+\item{data}{(Type: data.frame) the dataset to be used.}
 
-The variables are grouped by using \code{iso_o} and \code{iso_d} to obtain estimates.
-
-Write this argument as \code{c(code origin, code destination)}.}
-
-\item{robust}{robust (type: logical) determines whether a robust
-variance-covariance matrix should be used. By default is set to \code{TRUE}.
-
-If \code{robust = TRUE} the estimation results are consistent with the
-Stata code provided at \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
-when choosing robust estimation.}
-
-\item{data}{name of the dataset to be used (type: character).
-
-To estimate gravity equations you need a square dataset including bilateral
-flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
-(e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
-destination country), a distance measure defined by the argument \code{distance}
-and other potential influences (e.g. contiguity and common currency) given as a vector in
-\code{regressors} are required.
-
-All dummy variables should be of type numeric (0/1).
-
-Make sure the ISO codes are of type "character".
-
-If an independent variable is defined as a ratio, it should be logged.
-
-The user should perform some data cleaning beforehand to remove observations that contain entries that
-can distort estimates.
-
-When using panel data, a variable for the time may be included in the
-dataset. Note that the variable for the time dimension should be of
-type factor.
-
-The time variable can be used as a single dependent variable or interaction
-term with other variables such as country identifiers by inserting it into
-\code{regressors} or as an optional parameter.
-
-The function will remove zero flows and distances.}
-
-\item{...}{additional arguments to be passed to \code{fixed_effects}.}
+\item{...}{Additional arguments to be passed to the function.}
 }
 \value{
 The function returns the summary of the estimated gravity model as an
@@ -78,10 +39,10 @@ The function returns the summary of the estimated gravity model as an
 \description{
 \code{fixed_effects} estimates gravity models via
 OLS and fixed effects for the countries of origin and destination.
-These effects catch country specific effects.
 }
 \details{
-To account for MR terms, Feenstra (2002) and Feenstra (2004) propose to use
+To account for MR terms, \insertCite{Feenstra2002;textual}{gravity} and 
+\insertCite{Feenstra2004;textual}{gravity} propose to use
 importer and exporter fixed effects. Due to the use of these effects, all
 unilateral influences such as GDPs can no longer be estimated.
 
@@ -109,16 +70,12 @@ The function \code{fixed_effects} was therefore tested for
 cross-sectional data. Its up to the user to ensure that the functions can be applied
 to panel data.
 
-Depending on the panel dataset and the variables -
-specifically the type of fixed effects -
-included in the model, it may easily occur that the model is not computable.
-
 Also, note that by including bilateral fixed effects such as country-pair
 effects, the coefficients of time-invariant observables such as distance
 can no longer be estimated.
 
 Depending on the specific model, the code of the
-respective function may has to be changed in order to exclude the distance
+respective function might have to be changed in order to exclude the distance
 variable from the estimation.
 
 At the very least, the user should take special
@@ -133,35 +90,29 @@ see \insertCite{Egger2003;textual}{gravity}, \insertCite{Gomez-Herrera2013;textu
 \insertCite{Head2010;textual}{gravity} as well as the references therein.
 }
 \examples{
-\dontrun{
-data(gravity_no_zeros)
+# Example for CRAN checks:
+# Executable in < 5 sec
+library(dplyr)
+data("gravity_no_zeros")
 
-fixed_effects(dependent_variable = "flow",
-regressors = c("distw", "rta"), codes = c("iso_o", "iso_d"),
-robust = TRUE, data = gravity_no_zeros)
+# Choose 5 countries for testing
+countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+grav_small <- filter(gravity_no_zeros, iso_o \%in\% countries_chosen)
 
-fixed_effects(dependent_variable = "flow",
-regressors = c("distw", "rta", "comcur", "contig"),
-codes = c("iso_o", "iso_d"), robust = TRUE, data = gravity_no_zeros)
-}
-
-\dontshow{
-# examples for CRAN checks:
-# executable in < 5 sec together with the examples above
-# not shown to users
-
-data(gravity_no_zeros)
-# choose exemplarily 10 biggest countries for check data
-countries_chosen <- names(sort(table(gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
-grav_small <- gravity_no_zeros[gravity_no_zeros$iso_o \%in\% countries_chosen,]
-fixed_effects(dependent_variable = "flow", regressors = c("distw", "rta"),
-codes = c("iso_o", "iso_d"), robust = TRUE, data = grav_small)
-}
+fit <- fixed_effects(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = c("rta", "comcur", "contig"),
+  code_origin = "iso_o",
+  code_destination = "iso_d",
+  robust = FALSE,
+  data = grav_small
+)
 
 }
 \references{
-For more information on fixed effects as well as informaton on gravity models,
-theoretical foundations and suitable estimation methods in general see
+For more information on gravity models, theoretical foundations and
+estimation methods in general see
 
 \insertRef{Anderson1979}{gravity}
 
@@ -172,6 +123,8 @@ theoretical foundations and suitable estimation methods in general see
 \insertRef{Baier2009}{gravity}
 
 \insertRef{Baier2010}{gravity}
+
+\insertRef{Feenstra2002}{gravity}
 
 \insertRef{Head2010}{gravity}
 

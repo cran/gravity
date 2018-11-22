@@ -24,9 +24,7 @@
 #' when choosing robust estimation.
 #'
 #' The function \code{ols} was therefore tested for cross-sectional data. For the use with panel data
-#' no tests were performed.
-#'
-#' Therefore, it is up to the user to ensure that the functions can be applied
+#' no tests were performed. Therefore, it is up to the user to ensure that the functions can be applied
 #' to panel data.
 #'
 #' Depending on the panel dataset and the variables -
@@ -50,91 +48,43 @@
 #' see \insertCite{Egger2003;textual}{gravity}, \insertCite{Gomez-Herrera2013;textual}{gravity} and
 #' \insertCite{Head2010;textual}{gravity} as well as the references therein.
 #'
-#' @param dependent_variable name (type: character) of the dependent variable in the dataset
-#' \code{data} (e.g. trade flows).
-#'
-#' This variable is logged and then used as the dependent variable in the estimation.
+#' @param dependent_variable (Type: character) name of the dependent variable.
 #'
 #' If \code{uie = TRUE} the dependent variable is divided by the product of
-#' unilateral incomes (e.g. GDP variables \code{inc_o} and \code{inc_d} in the example datasets) of the
-#' countries of interest and logged afterwards.
+#' unilateral incomes (e.g. \code{income_origin} and \code{income_destination}) and logged afterwards.
 #'
 #' If \code{uie=FALSE} the dependent variable is logged directly. The transformed variable is then used as
 #' the dependent variable and the logged income variables are used as independent variables in the
 #' estimation.
 #'
-#' @param regressors name (type: character) of the regressors to include in the model.
+#' @param distance (Type: character) name of the distance variable that should be taken as the key independent variable 
+#' in the estimation. The distance is logged automatically when the function is executed.
 #'
-#' Include the distance variable in the dataset \code{data} containing a measure of
-#' distance between all pairs of bilateral partners and bilateral variables that should
-#' be taken as the independent variables in the estimation.
+#' @param additional_regressors (Type: character) names of the additional regressors to include in the model (e.g. a dummy
+#' variable to indicate contiguity). Unilateral metric variables such as GDPs can be added but those variables have to be 
+#' logged first. Interaction terms can be added.
+#' 
+#' Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.
 #'
-#' The distance is logged automatically when the function is executed.
+#' @param income_origin (Type: character) origin income variable (e.g. GDP) in the dataset.
 #'
-#' Unilateral metric variables such as GDPs can be added but those variables have to be logged first.
+#' @param income_destination (Type: character) destination income variable (e.g. GDP) in the dataset.
 #'
-#' Interaction terms can be added.
+#' @param code_origin (Type: character) country of origin variable (e.g. ISO-3 country codes). The variables are grouped 
+#' using this parameter.
 #'
-#' Write this argument as \code{c(distance, contiguity, common curreny, ...)}.
+#' @param code_destination (Type: character) country of destination variable (e.g. country ISO-3 codes). The variables are 
+#' grouped using this parameter.
 #'
-#' @param incomes variable name (type: character) of the income of the country of
-#' origin (e.g. \code{inc_o}) and destination (e.g. \code{inc_d}) in the dataset \code{data}.
-#'
-#' The dependent variable \code{dependent_variable} is divided by the product of the incomes.
-#'
-#' Write this argument as \code{c(income origin, income destination)}.
-#'
-#' @param codes variable name (type: character) of the code of the country
-#' of origin and destination (e.g. ISO-3 codes from the variables \code{iso_o} and \code{iso_d}) in the
-#' example datasets).
-#'
-#' The variables are grouped by using \code{iso_o} and \code{iso_d} to obtain estimates.
-#'
-#' Write this argument as \code{c(code origin, code destination)}.
-#'
-#' @param uie Unitary Income Elasticities (type: logic) determines whether the
+#' @param uie (Type: logical) Dtermines whether the
 #' parameters are to be estimated assuming unitary income elasticities. The default value is set
 #' to \code{FALSE}.
 #'
-#' If \code{uie} is set \code{TRUE}, the flows in the dependent variable \code{y} are divided
-#' by the product of the country pairs' incomes before the estimation.
+#' @param robust (Type: logical) whether robust fitting should be used. By default this is set to \code{FALSE}.
 #'
-#' If \code{uie} is set to \code{FALSE}, the income variables are logged and taken as independent
-#' variables in the estimation. The variable names for the incomes should be included (e.g. \code{inc_o}
-#' and \code{inc_d} in the example datasets).
+#' @param data (Type: data.frame) the dataset to be used.
 #'
-#' @param robust robust (type: logical) determines whether a robust
-#' variance-covariance matrix should be used. By default is set to \code{TRUE}.
-#'
-#' If \code{robust = TRUE} the estimation results are consistent with the
-#' Stata code provided at \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
-#' when choosing robust estimation.
-#'
-#' @param data name of the dataset to be used (type: character).
-#'
-#' To estimate gravity equations you need a square dataset including bilateral
-#' flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
-#' (e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
-#' destination country), a distance measure defined by the argument \code{distance}
-#' and other potential influences (e.g. contiguity and common currency) given as a vector in
-#' \code{regressors} are required.
-#'
-#' All dummy variables should be of type numeric (0/1).
-#'
-#' Make sure the ISO codes are of type "character".
-#'
-#' If an independent variable is defined as a ratio, it should be logged.
-#'
-#' The user should perform some data cleaning beforehand to remove observations that contain entries that
-#' can distort estimates.
-#'
-#' When using panel data, a variable for the time may be included in the
-#' dataset. Note that the variable for the time dimension should be of
-#' type factor.
-#'
-#' The function will remove zero flows and distances.
-#'
-#' @param ... additional arguments to be passed to \code{ols}.
+#' @param ... Additional arguments to be passed to the function.
 #'
 #' @references
 #' For more information on gravity models, theoretical foundations and
@@ -149,6 +99,8 @@
 #' \insertRef{Baier2009}{gravity}
 #'
 #' \insertRef{Baier2010}{gravity}
+#' 
+#' \insertRef{Feenstra2002}{gravity}
 #'
 #' \insertRef{Head2010}{gravity}
 #'
@@ -169,27 +121,27 @@
 #' and the references therein.
 #'
 #' @examples
-#' \dontrun{
-#' data(gravity_no_zeros)
-#'
-#' ols(dependent_variable = "flow", regressors = c("distw", "rta", "contig", "comcur"),
-#' incomes = c("gdp_o", "gdp_d"), codes = c("iso_o", "iso_d"),
-#' uie = TRUE, robust = TRUE, data = gravity_no_zeros)
-#' }
-#'
-#' \dontshow{
-#' # examples for CRAN checks:
-#' # executable in < 5 sec together with the examples above
-#' # not shown to users
-#'
-#' data(gravity_no_zeros)
-#' # choose exemplarily 10 biggest countries for check data
-#' countries_chosen <- names(sort(table(gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
-#' grav_small <- gravity_no_zeros[gravity_no_zeros$iso_o %in% countries_chosen,]
-#' ols(dependent_variable = "flow", regressors = c("distw", "rta"),
-#' incomes = c("gdp_o", "gdp_d"), codes = c("iso_o", "iso_d"),
-#' uie = FALSE, robust = TRUE, data = grav_small)
-#' }
+#' # Example for CRAN checks:
+#' # Executable in < 5 sec
+#' library(dplyr)
+#' data("gravity_no_zeros")
+#' 
+#' # Choose 5 countries for testing
+#' countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+#' grav_small <- filter(gravity_no_zeros, iso_o %in% countries_chosen)
+#' 
+#' fit <- ols(
+#'   dependent_variable = "flow",
+#'   distance = "distw",
+#'   additional_regressors = c("rta", "contig", "comcur"),
+#'   income_origin = "gdp_o",
+#'   income_destination = "gdp_d",
+#'   code_origin = "iso_o",
+#'   code_destination = "iso_d",
+#'   uie = FALSE,
+#'   robust = FALSE,
+#'   data = grav_small
+#' )
 #'
 #' @return
 #' The function returns the summary of the estimated gravity model as an
@@ -200,25 +152,37 @@
 #'
 #' @export
 
-ols <- function(dependent_variable, regressors, incomes, codes, uie = FALSE, robust = TRUE, data, ...) {
+ols <- function(dependent_variable,
+                distance,
+                additional_regressors = NULL,
+                income_origin,
+                income_destination,
+                code_origin,
+                code_destination,
+                uie = FALSE,
+                robust = FALSE,
+                data, ...) {
   # Checks ------------------------------------------------------------------
   stopifnot(is.data.frame(data))
   stopifnot(is.logical(uie))
   stopifnot(is.logical(robust))
+
   stopifnot(is.character(dependent_variable), dependent_variable %in% colnames(data), length(dependent_variable) == 1)
-  stopifnot(is.character(regressors), all(regressors %in% colnames(data)), length(regressors) > 1)
-  stopifnot(is.character(incomes) | all(incomes %in% colnames(data)) | length(incomes) == 2)
-  stopifnot(is.character(codes) | all(codes %in% colnames(data)) | length(codes) == 2)
 
-  # Split input vectors -----------------------------------------------------
-  inc_o <- incomes[1]
-  inc_d <- incomes[2]
+  stopifnot(is.character(distance), distance %in% colnames(data), length(distance) == 1)
 
-  code_o <- codes[1]
-  code_d <- codes[2]
+  if (!is.null(additional_regressors)) {
+    stopifnot(is.character(additional_regressors), all(additional_regressors %in% colnames(data)))
+  }
 
-  distance <- regressors[1]
-  additional_regressors <- regressors[-1]
+  stopifnot(is.character(income_origin), income_origin %in% colnames(data), length(income_origin) == 1)
+  stopifnot(is.character(income_destination), income_destination %in% colnames(data), length(income_destination) == 1)
+  
+  valid_origin <- data %>% select(code_origin) %>% distinct() %>% as_vector()
+  valid_destination <- data %>% select(code_destination) %>% distinct() %>% as_vector()
+  
+  stopifnot(is.character(code_origin), code_origin %in% colnames(data), length(code_origin) == 1)
+  stopifnot(is.character(code_destination), code_destination %in% colnames(data), length(code_destination) == 1)
 
   # Discarding unusable observations ----------------------------------------
   d <- data %>%
@@ -239,15 +203,12 @@ ols <- function(dependent_variable, regressors, incomes, codes, uie = FALSE, rob
     d <- d %>%
       mutate(
         y_log_ols = log(
-          !!sym(dependent_variable) / (!!sym(inc_o) * !!sym(inc_d))
+          !!sym(dependent_variable) / (!!sym(income_origin) * !!sym(income_destination))
         )
       ) %>%
       select(
         !!sym("y_log_ols"), !!sym("dist_log"), !!sym("additional_regressors")
       )
-
-    # Model --------------------------------------------------------------------
-    model_ols <- stats::lm(y_log_ols ~ ., data = d)
   }
 
   if (uie == FALSE) {
@@ -255,27 +216,30 @@ ols <- function(dependent_variable, regressors, incomes, codes, uie = FALSE, rob
     d <- d %>%
       mutate(
         y_log_ols = log(!!sym(dependent_variable)),
-        inc_o_log = log(!!sym(inc_o)),
-        inc_d_log = log(!!sym(inc_d))
+        inc_o_log = log(!!sym(income_origin)),
+        inc_d_log = log(!!sym(income_destination))
       ) %>%
       select(
         !!sym("y_log_ols"), !!sym("inc_o_log"), !!sym("inc_d_log"), !!sym("dist_log"), !!sym("additional_regressors")
       )
-
-    # Model --------------------------------------------------------------------
-    model_ols <- stats::lm(y_log_ols ~ ., data = d)
   }
 
-  # Return ---------------------------------------------------------------------
+
+  # Model -------------------------------------------------------------------
+  if (!is.null(additional_regressors)) {
+    vars <- paste(c("dist_log", "inc_o_log", "inc_d_log", additional_regressors), collapse = " + ")
+  } else {
+    vars <- paste(c("dist_log", "inc_o_log", "inc_d_log"), collapse = " + ")
+  }
+  
+  form <- stats::as.formula(paste("y_log_ols", "~", vars))
+  
   if (robust == TRUE) {
-    return_object_1 <- robust_summary(model_ols, robust = TRUE)
-    return_object_1$call <- as.formula(model_ols)
-    return(return_object_1)
+    model_ols <- MASS::rlm(form, data = d)
+  } else {
+    model_ols <- stats::lm(form, data = d)
   }
 
-  if (robust == FALSE) {
-    return_object_1 <- robust_summary(model_ols, robust = FALSE)
-    return_object_1$call <- as.formula(model_ols)
-    return(return_object_1)
-  }
+  model_ols$call <- form
+  return(model_ols)
 }

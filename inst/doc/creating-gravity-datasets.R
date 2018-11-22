@@ -1,7 +1,9 @@
 ## ----setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE----
 knitr::opts_chunk$set(eval = FALSE)
 
-## ----read----------------------------------------------------------------
+## ----gravity_no_zeros----------------------------------------------------
+#  # 1: Import and read the dataset
+#  
 #  url <- "http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip"
 #  zip <- "col_regfile09.zip"
 #  
@@ -10,33 +12,39 @@ knitr::opts_chunk$set(eval = FALSE)
 #  
 #  library(haven)
 #  col_regfile09 <- read_dta("col_regfile09.dta")
-
-## ----isolate-------------------------------------------------------------
+#  
+#  # 2: Isolation of one year
+#  
 #  library(dplyr)
 #  data06 <- col_regfile09 %>%
 #    filter(year == 2006)
-
-## ----choose--------------------------------------------------------------
+#  
+#  # 3: Choosing variables
+#  
 #  data06 <- data06 %>%
 #    select(iso_o, iso_d, distw, gdp_o, gdp_d, rta, flow, contig, comlang_off, comcur)
-
-## ----complete-cases------------------------------------------------------
+#  
+#  # 4: Isolation of complete cases
+#  
 #  library(tidyr)
 #  gravity_zeros <- data06 %>%
 #    drop_na()
-
-## ----scaling-------------------------------------------------------------
+#  
+#  # 5: Divide GDPs by 1,000,000 for scaling purposes
+#  
 #  gravity_zeros <- gravity_zeros %>%
 #    mutate(
 #      gdp_o = gdp_o / 1000000,
 #      gdp_d = gdp_d / 1000000
 #    )
-
-## ----no-zeros------------------------------------------------------------
+#  
+#  # 6: Exclusion of trade flows equal to 0
+#  
 #  gravity_no_zeros <- gravity_zeros %>%
 #    filter(flow > 0)
-
-## ----export--------------------------------------------------------------
+#  
+#  # 7: Export the data
+#  
 #  save(gravity_zeros, file = "gravity_zeros.rdata", compress = "xz")
 #  save(gravity_no_zeros, file = "gravity_no_zeros.rdata", compress = "xz")
 

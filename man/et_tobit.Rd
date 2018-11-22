@@ -4,50 +4,27 @@
 \alias{et_tobit}
 \title{\insertCite{Eaton1995;textual}{gravity} threshold Tobit model (ET Tobit)}
 \usage{
-et_tobit(dependent_variable, regressors, data, ...)
+et_tobit(dependent_variable, distance, additional_regressors = NULL,
+  data, ...)
 }
 \arguments{
-\item{dependent_variable}{name (type: character) of the dependent variable in the dataset
-\code{data}, e.g. trade flows.
-
-Following Carson and Sun (2007), the smallest positive flow value is
-used as an estimate of the threshold, this value is is added to the \code{dependent_variable},
+\item{dependent_variable}{(Type: character) name of the dependent variable. Following 
+\insertCite{Carson2007;textual}{gravity}, the smallest positive flow value is used as an estimate of the threshold, this value is is added to the \code{dependent_variable},
 the result is logged and taken as the dependent variable in the Tobit estimation with
 lower bound equal to the log of the smallest possible flow value.}
 
-\item{regressors}{name (type: character) of the regressors to include in the model.
+\item{distance}{(Type: character) name of the distance variable that should be taken as the key independent variable 
+in the estimation. The distance is logged automatically when the function is executed.}
 
-Include the distance variable in the dataset \code{data} containing a measure of
-distance between all pairs of bilateral partners and bilateral variables that should
-be taken as the independent variables in the estimation.
+\item{additional_regressors}{(Type: character) names of the additional regressors to include in the model (e.g. a dummy
+variable to indicate contiguity). Unilateral metric variables such as GDP should be inserted via the arguments 
+\code{income_origin} and \code{income_destination}.
 
-Unilateral metric variables such as GDPs can be added but those variables have to be logged first.
+Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.}
 
-Interaction terms can be added.
+\item{data}{(Type: data.frame) the dataset to be used.}
 
-Write this argument as \code{c(distance, contiguity, common curreny, ...)}.}
-
-\item{data}{name of the dataset to be used (type: character).
-
-To estimate gravity equations you need a square dataset including bilateral
-flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
-(e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
-destination country), a distance measure defined by the argument \code{distance}
-and other potential influences (e.g. contiguity and common currency) given as a vector in
-\code{regressors} are required.
-
-All dummy variables should be of type numeric (0/1).
-
-Make sure the ISO codes are of type "character".
-
-If an independent variable is defined as a ratio, it should be logged.
-
-The user should perform some data cleaning beforehand to remove observations that contain entries that
-can distort estimates.
-
-The function allows zero flows but will remove zero distances.}
-
-\item{...}{additional arguments to be passed to \code{et_tobit}.}
+\item{...}{Additional arguments to be passed to the function.}
 }
 \value{
 The function returns the summary of the estimated gravity model as a
@@ -56,23 +33,16 @@ The function returns the summary of the estimated gravity model as a
 \description{
 \code{et_tobit} estimates gravity models in their additive form
 by conducting a left-censored regression.
-
-It follows the \insertCite{Eaton1995;textual}{gravity} Tobit model,
-also called threshold Tobit model, where,
-instead of adding number \code{1} to the dependent variable as done
-in \code{\link[gravity]{tobit}}, the constant added to the
-data is estimated and interpreted as a threshold.
-
-For estimating this threshold, we follow \insertCite{Carson2007;textual}{gravity}.
 }
 \details{
 \code{et_tobit} represents the \insertCite{Eaton1995;textual}{gravity} Tobit model
-which is often used when several gravity models are compared.
+which is often used when several gravity models are compared, instead of adding number \code{1} to the dependent 
+variable as done in \code{\link[gravity]{tobit}}, the constant added to the data is estimated and interpreted as a 
+threshold.
 
 When taking the log of the gravity equation flows equal to zero constitute a problem as their
 log is not defined. Therefore, a constant is added to the flows.
 
-This constant, opposed to \code{\link[gravity]{tobit}}, is estimated.
 Compared to the usual ET-Tobit approaches, in this package, the estimation
 of the threshold is done before the other parameters are estimated.
 
@@ -111,35 +81,28 @@ as the \code{\link[censReg]{censReg}} function is not
 compatible with the \code{\link[sandwich]{vcovHC}} function.
 }
 \examples{
-\dontrun{
-# Example for data with zero trade flows
-data(gravity_zeros)
+# Example for CRAN checks:
+# Executable in < 5 sec
+library(dplyr)
+data("gravity_no_zeros")
 
-gravity_zeros <- gravity_zeros \%>\%
-    mutate(
-        lgdp_o = log(gdp_o),
-        lgdp_d = log(gdp_d)
-    )
+# Choose 5 countries for testing
+countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+grav_small <- filter(gravity_no_zeros, iso_o \%in\% countries_chosen)
 
-et_tobit(dependent_variable = "flow", regressors = c("distw", "rta","lgdp_o","lgdp_d"),
-data = gravity_zeros)
-}
+grav_small <- grav_small \%>\%
+  mutate(
+    flow = ifelse(flow < 5, 0, flow), # cutoff for testing purposes
+    lgdp_o = log(gdp_o),
+    lgdp_d = log(gdp_d)
+  )
 
-\dontshow{
-# examples for CRAN checks:
-# executable in < 5 sec together with the examples above
-# not shown to users
-
-data(gravity_zeros)
-gravity_zeros$lgdp_o <- log(gravity_zeros$gdp_o)
-gravity_zeros$lgdp_d <- log(gravity_zeros$gdp_d)
-
-# choose exemplarily 10 biggest countries for check data
-countries_chosen_zeros <- names(sort(table(gravity_zeros$iso_o), decreasing = TRUE)[1:10])
-grav_small_zeros <- gravity_zeros[gravity_zeros$iso_o \%in\% countries_chosen_zeros,]
-et_tobit(dependent_variable = "flow", regressors = c("distw", "rta","lgdp_o","lgdp_d"),
-data = grav_small_zeros)
-}
+fit <- et_tobit(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = c("rta", "lgdp_o", "lgdp_d"),
+  data = grav_small
+)
 
 }
 \references{
@@ -156,24 +119,26 @@ estimation methods in general see
 
 \insertRef{Baier2010}{gravity}
 
+\insertRef{Feenstra2002}{gravity}
+
 \insertRef{Head2010}{gravity}
+
+\insertRef{Head2014}{gravity}
 
 \insertRef{Santos2006}{gravity}
 
 and the citations therein.
 
-Especially for Tobit models see
-
-\insertRef{Tobin1958}{gravity}
-
-\insertRef{Eaton1995}{gravity}
-
-\insertRef{Eaton2001}{gravity}
-
-\insertRef{Carson2007}{gravity}
-
 See \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook} for gravity datasets and Stata code for estimating gravity models.
+
+For estimating gravity equations using panel data see
+
+\insertRef{Egger2003}{gravity}
+
+\insertRef{Gomez-Herrera2013}{gravity}
+
+and the references therein.
 }
 \seealso{
-\code{\link[censReg]{censReg}}
+\code{\link[censReg]{censReg}}, \code{\link[gravity]{et_tobit}}
 }

@@ -1,18 +1,24 @@
 context("test-gravity.R")
 
 test_that("Fixed Effects returns a valid output", {
-  # fit model with example dataset
+  # Example for CRAN checks:
+  # Executable in < 5 sec
+  library(dplyr)
   data("gravity_no_zeros")
-  countries_chosen <- names(sort(table(gravity_no_zeros$iso_o), decreasing = TRUE)[1:10])
-  grav_small <- gravity_no_zeros[gravity_no_zeros$iso_o %in% countries_chosen, ]
+
+  # Choose 5 countries for testing
+  countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+  grav_small <- filter(gravity_no_zeros, iso_o %in% countries_chosen)
 
   fit <- fixed_effects(
     dependent_variable = "flow",
-    regressors = c("distw", "rta", "comcur", "contig"),
-    codes = c("iso_o", "iso_d"), robust = TRUE, data = grav_small
+    distance = "distw",
+    additional_regressors = c("rta", "comcur", "contig"),
+    code_origin = "iso_o",
+    code_destination = "iso_d",
+    robust = FALSE,
+    data = grav_small
   )
 
-  expect_is(fit, "summary.lm")
-  expect_is(fit$coefficients, "matrix")
-  expect_output(str(fit), "List of 11")
+  expect_is(fit, "lm")
 })

@@ -3,21 +3,14 @@
 #' @description \code{et_tobit} estimates gravity models in their additive form
 #' by conducting a left-censored regression.
 #'
-#' It follows the \insertCite{Eaton1995;textual}{gravity} Tobit model,
-#' also called threshold Tobit model, where,
-#' instead of adding number \code{1} to the dependent variable as done
-#' in \code{\link[gravity]{tobit}}, the constant added to the
-#' data is estimated and interpreted as a threshold.
-#'
-#' For estimating this threshold, we follow \insertCite{Carson2007;textual}{gravity}.
-#'
 #' @details \code{et_tobit} represents the \insertCite{Eaton1995;textual}{gravity} Tobit model
-#' which is often used when several gravity models are compared.
+#' which is often used when several gravity models are compared, instead of adding number \code{1} to the dependent 
+#' variable as done in \code{\link[gravity]{tobit}}, the constant added to the data is estimated and interpreted as a 
+#' threshold.
 #'
 #' When taking the log of the gravity equation flows equal to zero constitute a problem as their
 #' log is not defined. Therefore, a constant is added to the flows.
 #'
-#' This constant, opposed to \code{\link[gravity]{tobit}}, is estimated.
 #' Compared to the usual ET-Tobit approaches, in this package, the estimation
 #' of the threshold is done before the other parameters are estimated.
 #'
@@ -55,48 +48,24 @@
 #' as the \code{\link[censReg]{censReg}} function is not
 #' compatible with the \code{\link[sandwich]{vcovHC}} function.
 #'
-#' @param dependent_variable name (type: character) of the dependent variable in the dataset
-#' \code{data}, e.g. trade flows.
-#'
-#' Following Carson and Sun (2007), the smallest positive flow value is
-#' used as an estimate of the threshold, this value is is added to the \code{dependent_variable},
+#' @param dependent_variable (Type: character) name of the dependent variable. Following 
+#' \insertCite{Carson2007;textual}{gravity}, the smallest positive flow value is used as an estimate of the threshold, this value is is added to the \code{dependent_variable},
 #' the result is logged and taken as the dependent variable in the Tobit estimation with
 #' lower bound equal to the log of the smallest possible flow value.
 #'
-#' @param regressors name (type: character) of the regressors to include in the model.
+#' @param distance (Type: character) name of the distance variable that should be taken as the key independent variable 
+#' in the estimation. The distance is logged automatically when the function is executed.
 #'
-#' Include the distance variable in the dataset \code{data} containing a measure of
-#' distance between all pairs of bilateral partners and bilateral variables that should
-#' be taken as the independent variables in the estimation.
+#' @param additional_regressors (Type: character) names of the additional regressors to include in the model (e.g. a dummy
+#' variable to indicate contiguity). Unilateral metric variables such as GDP should be inserted via the arguments 
+#' \code{income_origin} and \code{income_destination}.
 #'
-#' Unilateral metric variables such as GDPs can be added but those variables have to be logged first.
+#' Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.
 #'
-#' Interaction terms can be added.
+#' @param data (Type: data.frame) the dataset to be used.
 #'
-#' Write this argument as \code{c(distance, contiguity, common curreny, ...)}.
-#'
-#' @param data name of the dataset to be used (type: character).
-#'
-#' To estimate gravity equations you need a square dataset including bilateral
-#' flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
-#' (e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
-#' destination country), a distance measure defined by the argument \code{distance}
-#' and other potential influences (e.g. contiguity and common currency) given as a vector in
-#' \code{regressors} are required.
-#'
-#' All dummy variables should be of type numeric (0/1).
-#'
-#' Make sure the ISO codes are of type "character".
-#'
-#' If an independent variable is defined as a ratio, it should be logged.
-#'
-#' The user should perform some data cleaning beforehand to remove observations that contain entries that
-#' can distort estimates.
-#'
-#' The function allows zero flows but will remove zero distances.
-#'
-#' @param ... additional arguments to be passed to \code{et_tobit}.
-#'
+#' @param ... Additional arguments to be passed to the function.
+#' 
 #' @references
 #' For more information on gravity models, theoretical foundations and
 #' estimation methods in general see
@@ -110,73 +79,73 @@
 #' \insertRef{Baier2009}{gravity}
 #'
 #' \insertRef{Baier2010}{gravity}
+#' 
+#' \insertRef{Feenstra2002}{gravity}
 #'
 #' \insertRef{Head2010}{gravity}
+#'
+#' \insertRef{Head2014}{gravity}
 #'
 #' \insertRef{Santos2006}{gravity}
 #'
 #' and the citations therein.
 #'
-#' Especially for Tobit models see
-#'
-#' \insertRef{Tobin1958}{gravity}
-#'
-#' \insertRef{Eaton1995}{gravity}
-#'
-#' \insertRef{Eaton2001}{gravity}
-#'
-#' \insertRef{Carson2007}{gravity}
-#'
 #' See \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook} for gravity datasets and Stata code for estimating gravity models.
 #'
+#' For estimating gravity equations using panel data see
+#'
+#' \insertRef{Egger2003}{gravity}
+#'
+#' \insertRef{Gomez-Herrera2013}{gravity}
+#'
+#' and the references therein.
+#'
 #' @examples
-#' \dontrun{
-#' # Example for data with zero trade flows
-#' data(gravity_zeros)
-#'
-#' gravity_zeros <- gravity_zeros %>%
-#'     mutate(
-#'         lgdp_o = log(gdp_o),
-#'         lgdp_d = log(gdp_d)
-#'     )
-#'
-#' et_tobit(dependent_variable = "flow", regressors = c("distw", "rta","lgdp_o","lgdp_d"),
-#' data = gravity_zeros)
-#' }
-#'
-#' \dontshow{
-#' # examples for CRAN checks:
-#' # executable in < 5 sec together with the examples above
-#' # not shown to users
-#'
-#' data(gravity_zeros)
-#' gravity_zeros$lgdp_o <- log(gravity_zeros$gdp_o)
-#' gravity_zeros$lgdp_d <- log(gravity_zeros$gdp_d)
-#'
-#' # choose exemplarily 10 biggest countries for check data
-#' countries_chosen_zeros <- names(sort(table(gravity_zeros$iso_o), decreasing = TRUE)[1:10])
-#' grav_small_zeros <- gravity_zeros[gravity_zeros$iso_o %in% countries_chosen_zeros,]
-#' et_tobit(dependent_variable = "flow", regressors = c("distw", "rta","lgdp_o","lgdp_d"),
-#' data = grav_small_zeros)
-#' }
+#' # Example for CRAN checks:
+#' # Executable in < 5 sec
+#' library(dplyr)
+#' data("gravity_no_zeros")
+#' 
+#' # Choose 5 countries for testing
+#' countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+#' grav_small <- filter(gravity_no_zeros, iso_o %in% countries_chosen)
+#' 
+#' grav_small <- grav_small %>%
+#'   mutate(
+#'     flow = ifelse(flow < 5, 0, flow), # cutoff for testing purposes
+#'     lgdp_o = log(gdp_o),
+#'     lgdp_d = log(gdp_d)
+#'   )
+#' 
+#' fit <- et_tobit(
+#'   dependent_variable = "flow",
+#'   distance = "distw",
+#'   additional_regressors = c("rta", "lgdp_o", "lgdp_d"),
+#'   data = grav_small
+#' )
 #'
 #' @return
 #' The function returns the summary of the estimated gravity model as a
 #' \code{\link[censReg]{censReg}}-object.
 #'
-#' @seealso \code{\link[censReg]{censReg}}
+#' @seealso \code{\link[censReg]{censReg}}, \code{\link[gravity]{et_tobit}}
 #'
 #' @export
 
-et_tobit <- function(dependent_variable, regressors, data, ...) {
+et_tobit <- function(dependent_variable,
+                     distance,
+                     additional_regressors = NULL,
+                     data, ...) {
   # Checks ------------------------------------------------------------------
   stopifnot(is.data.frame(data))
-  stopifnot(is.character(dependent_variable), dependent_variable %in% colnames(data), length(dependent_variable) == 1)
-  stopifnot(is.character(regressors), all(regressors %in% colnames(data)), length(regressors) > 1)
 
-  # Split input vectors -----------------------------------------------------
-  distance <- regressors[1]
-  additional_regressors <- regressors[-1]
+  stopifnot(is.character(dependent_variable), dependent_variable %in% colnames(data), length(dependent_variable) == 1)
+
+  stopifnot(is.character(distance), distance %in% colnames(data), length(distance) == 1)
+
+  if (!is.null(additional_regressors)) {
+    stopifnot(is.character(additional_regressors), all(additional_regressors %in% colnames(data)))
+  }
 
   # Discarding unusable observations ----------------------------------------
   d <- data %>%
@@ -213,19 +182,24 @@ et_tobit <- function(dependent_variable, regressors, data, ...) {
     ungroup()
 
   # Model -------------------------------------------------------------------
-  vars <- paste(c("dist_log", additional_regressors), collapse = " + ")
+  if (!is.null(additional_regressors)) {
+    vars <- paste(c("dist_log", additional_regressors), collapse = " + ")
+  } else {
+    vars <- "dist_log"
+  }
+  
   form <- stats::as.formula(paste("y_cens_log_et", "~", vars))
+  
   model_et_tobit <- censReg::censReg(
     formula = form,
     left = y2min_log,
     right = Inf,
     data = d,
-    start = rep(0, 2 + length(regressors)),
+    start = rep(0, 3 + length(additional_regressors)),
     method = "BHHH"
   )
+  
+  model_et_tobit$call <- form
 
-  # Return ------------------------------------------------------------------
-  return_object <- summary(model_et_tobit)
-  return_object$call <- form
-  return(return_object)
+  return(model_et_tobit)
 }

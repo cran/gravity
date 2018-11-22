@@ -15,13 +15,13 @@
     \item{\code{iso_o}}{ISO-Code of country of origin}
     \item{\code{iso_d}}{ISO-Code of country of destination}
     \item{\code{distw}}{weighted distance}
-    \item{\code{gdp_o}}{GDP of country of origin}
-    \item{\code{gdp_d}}{GDP of country of destination}
-    \item{\code{rta}}{regional trade agreement}
-    \item{\code{flow}}{trade flow}
-    \item{\code{contig}}{contiguity}
-    \item{\code{comlang_off}}{common official language}
-    \item{\code{comcur}}{common currency}
+    \item{\code{gdp_o}}{GDP of country of origin in million dollars}
+    \item{\code{gdp_d}}{GDP of country of destination in million dollars}
+    \item{\code{rta}}{regional trade agreement dummy}
+    \item{\code{flow}}{trade flow in million dollars}
+    \item{\code{contig}}{contiguity dummy}
+    \item{\code{comlang_off}}{common official language dummy}
+    \item{\code{comcur}}{common currency dummy}
   }
 }
 \source{

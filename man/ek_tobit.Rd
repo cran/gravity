@@ -4,62 +4,31 @@
 \alias{ek_tobit}
 \title{\insertCite{Eaton2001;textual}{gravity} Tobit model (EK Tobit)}
 \usage{
-ek_tobit(dependent_variable, regressors, code_destination, robust = TRUE,
-  data, ...)
+ek_tobit(dependent_variable, distance, additional_regressors = NULL,
+  code_destination, robust = FALSE, data, ...)
 }
 \arguments{
-\item{dependent_variable}{name (type: character) of the dependent variable in the dataset
-\code{data} (e.g. trade flows).
+\item{dependent_variable}{(Type: character) name of the dependent variable. This variable is logged and then used as the 
+dependent variable in the estimation. As the log of zero is not defined, all flows equal to zero are replaced by a left 
+open interval with the logged minimum trade flow of the respective importing country as right border.}
 
-This variable is logged and then used as the dependent variable in the estimation.
+\item{distance}{(Type: character) name of the distance variable that should be taken as the key independent variable 
+in the estimation. The distance is logged automatically when the function is executed.}
 
-As the log of zero is not defined, all flows equal to zero are replaced by a left open interval
-with the logged minimum trade flow of the respective importing country as right border.}
+\item{additional_regressors}{(Type: character) names of the additional regressors to include in the model (e.g. a dummy
+variable to indicate contiguity). Unilateral metric variables such as GDP should be inserted via the arguments 
+\code{income_origin} and \code{income_destination}.
 
-\item{regressors}{name (type: character) of the regressors to include in the model.
+Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.}
 
-Include the distance variable in the dataset \code{data} containing a measure of
-distance between all pairs of bilateral partners and bilateral variables that should
-be taken as the independent variables in the estimation.
+\item{code_destination}{(Type: character) country of destination variable (e.g. country ISO-3 codes). The variables are 
+grouped using this parameter.}
 
-Unilateral metric variables such as GDPs should be inserted via the argument \code{incomes}.
+\item{robust}{(Type: logical) whether robust fitting should be used. By default this is set to \code{FALSE}.}
 
-Interaction terms can be added.
+\item{data}{(Type: data.frame) the dataset to be used.}
 
-Write this argument as \code{c(distance, contiguity, common curreny, ...)}.}
-
-\item{code_destination}{variable name (type: character) of the label of the country
-of destination (e.g. ISO-3 code from the \code{iso_d} variable in the example datasets). The variables
-are grouped by using \code{iso_d} to obtain estimates.}
-
-\item{robust}{robust (type: logical) determines whether a robust
-variance-covariance matrix should be used. By default is set to \code{TRUE}.
-
-If \code{robust = TRUE} the estimation results are consistent with the
-Stata code provided at \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook}
-when choosing robust estimation.}
-
-\item{data}{name of the dataset to be used (type: character).
-
-To estimate gravity equations you need a square dataset including bilateral
-flows defined by the argument \code{dependent_variable}, ISO codes or similar of type character
-(e.g. \code{iso_o} for the country of origin and \code{iso_d} for the
-destination country), a distance measure defined by the argument \code{distance}
-and other potential influences (e.g. contiguity and common currency) given as a vector in
-\code{regressors} are required.
-
-All dummy variables should be of type numeric (0/1).
-
-Make sure the ISO codes are of type "character".
-
-If an independent variable is defined as a ratio, it should be logged.
-
-The user should perform some data cleaning beforehand to remove observations that contain entries that
-can distort estimates.
-
-The function allows zero flows but will remove zero distances.}
-
-\item{...}{additional arguments to be passed to \code{ek_tobit}.}
+\item{...}{Additional arguments to be passed to the function.}
 }
 \value{
 The function returns the summary of the estimated gravity model as a
@@ -68,12 +37,10 @@ The function returns the summary of the estimated gravity model as a
 \description{
 \code{ek_tobit} estimates gravity models in their additive form
 by conducting a censored regression.
-
-It follows the \insertCite{Eaton2001;textual}{gravity} Tobit model where each country
-is assigned specific censoring bounds.
 }
 \details{
-\code{ek_tobit} represents the \insertCite{Eaton2001;textual}{gravity} Tobit model.
+\code{ek_tobit} represents the \insertCite{Eaton2001;textual}{gravity} Tobit model where each country
+is assigned specific censoring bounds.
 
 When taking the log of the gravity equation flows equal to zero
 constitute a problem as their log is not defined. Therefore, in \code{ek_tobit} all values of
@@ -93,7 +60,7 @@ when choosing robust estimation.
 
 For other Tobit functions, see \code{\link[gravity]{tobit}}
 for a simple Tobit model where number \code{1} is added to all observations
-and \code{\link[gravity]{et_tobit}} for the Eaton and Tamura (1994)
+and \code{\link[gravity]{et_tobit}} for the \insertCite{Eaton1995;textual}{gravity}
 threshold Tobit model where instead of simply adding number \code{1}
 to the data the threshold is estimated.
 
@@ -101,37 +68,30 @@ The function is designed for cross-sectional data, but can be extended to panel 
 \code{\link[survival]{survreg}} function.
 }
 \examples{
-\dontrun{
-# Example for data with zero trade flows
-data(gravity_zeros)
+# Example for CRAN checks:
+# Executable in < 5 sec
+library(dplyr)
+data("gravity_no_zeros")
 
-gravity_zeros <- gravity_zeros \%>\%
-    mutate(
-        lgdp_o = log(gdp_o),
-        lgdp_d = log(gdp_d)
-    )
+# Choose 5 countries for testing
+countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+grav_small <- filter(gravity_no_zeros, iso_o \%in\% countries_chosen)
 
-ek_tobit(dependent_variable = "flow", regressors = c("distw", "rta","lgdp_o","lgdp_d"),
-code_destination = "iso_d",
-robust = TRUE, data = gravity_zeros)
-}
+grav_small <- grav_small \%>\%
+  mutate(
+    flow = ifelse(flow < 5, 0, flow), # cutoff for testing purposes
+    lgdp_o = log(gdp_o),
+   lgdp_d = log(gdp_d)
+  )
 
-\dontshow{
-# examples for CRAN checks:
-# executable in < 5 sec together with the examples above
-# not shown to users
-
-data(gravity_zeros)
-gravity_zeros$lgdp_o <- log(gravity_zeros$gdp_o)
-gravity_zeros$lgdp_d <- log(gravity_zeros$gdp_d)
-
-# choose exemplarily 10 biggest countries for check data
-countries_chosen_zeros <- names(sort(table(gravity_zeros$iso_o), decreasing = TRUE)[1:10])
-grav_small_zeros <- gravity_zeros[gravity_zeros$iso_o \%in\% countries_chosen_zeros,]
-ek_tobit(dependent_variable = "flow", regressors = c("distw", "rta", "lgdp_o", "lgdp_d"),
-code_destination = "iso_d",
-robust = TRUE, data = grav_small_zeros)
-}
+fit <- ek_tobit(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = c("distw", "rta", "lgdp_o", "lgdp_d"),
+  code_destination = "iso_d",
+  robust = FALSE,
+  data = grav_small
+)
 
 }
 \references{
@@ -148,24 +108,26 @@ estimation methods in general see
 
 \insertRef{Baier2010}{gravity}
 
+\insertRef{Feenstra2002}{gravity}
+
 \insertRef{Head2010}{gravity}
+
+\insertRef{Head2014}{gravity}
 
 \insertRef{Santos2006}{gravity}
 
 and the citations therein.
 
-Especially for Tobit models see
-
-\insertRef{Tobin1958}{gravity}
-
-\insertRef{Eaton1995}{gravity}
-
-\insertRef{Eaton2001}{gravity}
-
-\insertRef{Carson2007}{gravity}
-
 See \href{https://sites.google.com/site/hiegravity/}{Gravity Equations: Workhorse, Toolkit, and Cookbook} for gravity datasets and Stata code for estimating gravity models.
+
+For estimating gravity equations using panel data see
+
+\insertRef{Egger2003}{gravity}
+
+\insertRef{Gomez-Herrera2013}{gravity}
+
+and the references therein.
 }
 \seealso{
-\code{\link[survival]{Surv}}, \code{\link[survival]{survreg}}
+\code{\link[survival]{Surv}}, \code{\link[survival]{survreg}}, \code{\link[gravity]{tobit}}
 }

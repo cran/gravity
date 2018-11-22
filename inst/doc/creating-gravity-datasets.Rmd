@@ -29,9 +29,9 @@ As some of the functions in the package are capable of handling zero values in t
 The original dataset downloaded from [SciencesPo](http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip)
 was edited in the following way:
 
-## Import and read the dataset
+```{r gravity_no_zeros}
+# 1: Import and read the dataset
 
-```{r read}
 url <- "http://econ.sciences-po.fr/sites/default/files/file/tmayer/data/col_regfile09.zip"
 zip <- "col_regfile09.zip"
 
@@ -40,55 +40,41 @@ try(system("7z e -aos col_regfile09.zip"))
 
 library(haven)
 col_regfile09 <- read_dta("col_regfile09.dta")
-```
 
-## Isolation of one year
+# 2: Isolation of one year
 
-```{r isolate}
 library(dplyr)
 data06 <- col_regfile09 %>% 
   filter(year == 2006)
-```
 
-## Choosing variables (select columns)
+# 3: Choosing variables
 
-```{r choose}
 data06 <- data06 %>% 
   select(iso_o, iso_d, distw, gdp_o, gdp_d, rta, flow, contig, comlang_off, comcur)
-```
 
-## Transforming data
+# 4: Isolation of complete cases
 
-### Isolation of complete cases
-
-```{r complete-cases}
 library(tidyr)
 gravity_zeros <- data06 %>% 
   drop_na()
-```
 
-### Divide GDPs by 1,000,000 for scaling purposes
+# 5: Divide GDPs by 1,000,000 for scaling purposes
 
-```{r scaling}
 gravity_zeros <- gravity_zeros %>% 
   mutate(
     gdp_o = gdp_o / 1000000,
     gdp_d = gdp_d / 1000000
   )
-```
 
-### Exclusion of trade flows equal to 0
+# 6: Exclusion of trade flows equal to 0
 
-```{r no-zeros}
 gravity_no_zeros <- gravity_zeros %>% 
   filter(flow > 0)
-```
 
-## Export the data
+# 7: Export the data
 
-```{r export}
 save(gravity_zeros, file = "gravity_zeros.rdata", compress = "xz")
 save(gravity_no_zeros, file = "gravity_no_zeros.rdata", compress = "xz")
 ```
 
-## References
+# References
