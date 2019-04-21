@@ -4,7 +4,7 @@
 #' multiplicative form via Nonlinear Least Squares.
 #'
 #' @details \code{nls} is an estimation method for gravity models
-#' belonging to generalized linear models. It is estimated via \code{\link[stats]{glm}} using the gaussian 
+#' belonging to generalized linear models. It is estimated via \code{\link[stats]{glm}} using the gaussian
 #' distribution and a log-link.
 #'
 #' As the method may not lead to convergence when poor
@@ -43,19 +43,17 @@
 #' see \insertCite{Egger2003;textual}{gravity}, \insertCite{Gomez-Herrera2013;textual}{gravity} and
 #' \insertCite{Head2010;textual}{gravity} as well as the references therein.
 #'
-#' @param dependent_variable (Type: character) name of the dependent variable. This variable is logged and then used as 
+#' @param dependent_variable (Type: character) name of the dependent variable. This variable is logged and then used as
 #' the dependent variable in the estimation.
 #'
-#' @param distance (Type: character) name of the distance variable that should be taken as the key independent variable 
+#' @param distance (Type: character) name of the distance variable that should be taken as the key independent variable
 #' in the estimation. The distance is logged automatically when the function is executed.
 #'
 #' @param additional_regressors (Type: character) names of the additional regressors to include in the model (e.g. a dummy
-#' variable to indicate contiguity). Unilateral metric variables such as GDPs can be added but those variables have to be 
+#' variable to indicate contiguity). Unilateral metric variables such as GDPs can be added but those variables have to be
 #' logged first. Interaction terms can be added.
-#' 
-#' Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.
 #'
-#' @param robust (Type: logical) whether robust fitting should be used. By default this is set to \code{FALSE}.
+#' Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.
 #'
 #' @param data (Type: data.frame) the dataset to be used.
 #'
@@ -74,7 +72,7 @@
 #' \insertRef{Baier2009}{gravity}
 #'
 #' \insertRef{Baier2010}{gravity}
-#' 
+#'
 #' \insertRef{Feenstra2002}{gravity}
 #'
 #' \insertRef{Head2010}{gravity}
@@ -115,10 +113,8 @@
 #'   dependent_variable = "flow",
 #'   distance = "distw",
 #'   additional_regressors = c("rta", "lgdp_o", "lgdp_d"),
-#'   robust = FALSE,
 #'   data = grav_small
 #' )
-#'
 #' @return
 #' The function returns the summary of the estimated gravity model similar to a
 #' \code{\link[stats]{glm}}-object.
@@ -131,11 +127,9 @@
 nls <- function(dependent_variable,
                 distance,
                 additional_regressors = NULL,
-                robust = FALSE,
                 data, ...) {
   # Checks ------------------------------------------------------------------
   stopifnot(is.data.frame(data))
-  stopifnot(is.logical(robust))
 
   stopifnot(is.character(dependent_variable), dependent_variable %in% colnames(data), length(dependent_variable) == 1)
 
@@ -146,19 +140,17 @@ nls <- function(dependent_variable,
   }
 
   # Discarding unusable observations ----------------------------------------
-  d <- data %>%
-    filter_at(vars(!!sym(distance)), any_vars(!!sym(distance) > 0)) %>%
-    filter_at(vars(!!sym(distance)), any_vars(is.finite(!!sym(distance)))) %>%
-    filter_at(vars(!!sym(dependent_variable)), any_vars(!!sym(dependent_variable) > 0)) %>%
-    filter_at(vars(!!sym(dependent_variable)), any_vars(is.finite(!!sym(dependent_variable))))
+  d <- discard_unusable(data, c(distance, dependent_variable))
 
-  # Transforming data, logging distances ---------------------------------------
+  # Transforming data, logging distances ------------------------------------
+  d <- log_distance(d, distance)
+
+  # Transforming data, selecting variables ----------------------------------
   d <- d %>%
-    mutate(
-      dist_log = log(!!sym(distance))
-    ) %>%
     select(
-      !!sym("dependent_variable"), !!sym("dist_log"), !!sym("additional_regressors")
+      !!sym("dependent_variable"),
+      !!sym("dist_log"),
+      !!sym("additional_regressors")
     )
 
   # Model ----------------------------------------------------------------------
@@ -182,24 +174,15 @@ nls <- function(dependent_variable,
   model_PPML_mu <- model_PPML$fitted.values
   model_PPML_start <- model_PPML$coefficients
 
-  model_nls <- glm(form,
+  model_nls <- stats::glm(form,
     data = d, family = stats::gaussian(link = "log"),
     control = list(maxit = 200, trace = FALSE),
     etastart = model_PPML_eta, # linear predictors
     mustart = model_PPML_mu, # fitted values
-    start = model_PPML_start
-  ) # estimated coefficients
-
-  if (robust == TRUE) {
-    model_nls_robust <- lmtest::coeftest(model_nls,
-      vcov = sandwich::vcovHC(model_nls, "HC1")
-    )
-
-    model_nls$coefficients <- model_nls_robust[seq_along(rownames(model_nls_robust)), ]
-  }
+    start = model_PPML_start # estimated coefficients
+  )
 
   model_nls$call <- form
-  class(model_nls) <- c(class(model_nls), "nls")
-
+  class(model_nls) <- c(class(model_nls), "gravity_nls")
   return(model_nls)
 }

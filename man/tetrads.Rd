@@ -6,25 +6,25 @@
 \usage{
 tetrads(dependent_variable, distance, additional_regressors, code_origin,
   code_destination, filter_origin = NULL, filter_destination = NULL,
-  multiway = TRUE, data, ...)
+  multiway = FALSE, data, ...)
 }
 \arguments{
-\item{dependent_variable}{(Type: character) name of the dependent variable. This variable is logged and then used as 
+\item{dependent_variable}{(Type: character) name of the dependent variable. This variable is logged and then used as
 the dependent variable in the estimation.}
 
-\item{distance}{(Type: character) name of the distance variable that should be taken as the key independent variable 
+\item{distance}{(Type: character) name of the distance variable that should be taken as the key independent variable
 in the estimation. The distance is logged automatically when the function is executed.}
 
 \item{additional_regressors}{(Type: character) names of the additional regressors to include in the model (e.g. a dummy
-variable to indicate contiguity). Unilateral metric variables such as GDP should be inserted via the arguments 
+variable to indicate contiguity). Unilateral metric variables such as GDP should be inserted via the arguments
 \code{income_origin} and \code{income_destination}.
 
 Write this argument as \code{c(contiguity, common currency, ...)}. By default this is set to \code{NULL}.}
 
-\item{code_origin}{(Type: character) country of origin variable (e.g. ISO-3 country codes). The variables are grouped 
+\item{code_origin}{(Type: character) country of origin variable (e.g. ISO-3 country codes). The variables are grouped
 using this parameter.}
 
-\item{code_destination}{(Type: character) country of destination variable (e.g. country ISO-3 codes). The variables are 
+\item{code_destination}{(Type: character) country of destination variable (e.g. country ISO-3 codes). The variables are
 grouped using this parameter.}
 
 \item{filter_origin}{(Type: character) Reference exporting country.}
@@ -99,10 +99,8 @@ fit <- tetrads(
   code_destination = "iso_d",
   filter_origin = countries_chosen[1],
   filter_destination = countries_chosen[2],
-  multiway = FALSE,
   data = grav_small
 )
-
 }
 \references{
 For more information on gravity models, theoretical foundations and
@@ -140,5 +138,4 @@ and the references therein.
 }
 \seealso{
 \code{\link[stats]{lm}}, \code{\link[lmtest]{coeftest}},
-\code{\link[multiwayvcov]{cluster.vcov}}
 }

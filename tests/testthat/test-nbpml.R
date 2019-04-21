@@ -14,7 +14,6 @@ test_that("NBPML returns a valid output", {
     dependent_variable = "flow",
     distance = "distw",
     additional_regressors = c("rta", "iso_o", "iso_d"),
-    robust = FALSE,
     data = grav_small
   )
 

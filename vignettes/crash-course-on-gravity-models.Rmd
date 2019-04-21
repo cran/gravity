@@ -140,14 +140,14 @@ augment(fit)
 
 ## Bonus Vetus
 
-@Baier2010 suggest a modification of the simple OLS that is easily implemented, allows for comparative statics and yields results close to those of NLS, called Bonus vetus OLS (BVU and BVW). They estimate gravity models in their additive form.
+@Baier2010 suggests a modification of the simple OLS that is easily implemented, allows for comparative statics and yields results close to those of NLS, called Bonus vetus OLS (BVU and BVW). They estimate gravity models in their additive form.
 
 As unilateral income elasticities are assumed, flows are divided by the product of unilateral incomes. The dependent variable for the estimation is therefore
 $$\log\left(\frac{y}{inc_{o} \: inc_{d}}\right).$$
 
 By applying a Taylor-series expansion and the assumption of symmetrical, bilateral trade costs, they develop a reduced gravity model in which multilateral and worldwide resistance enter exogenously.
 
-@Baier2010 distinguish two types of Bonus vetus estimations depending on how the Taylor-series is centered. One method, called BVU, uses simple averages while the other, called BVW, uses GDP weights. Depending on which method is used, the transaction costs are weighted differently. For advantages and disadvantages of both methods see @Baier2009 and @Baier2010.
+@Baier2010 distinguishes two types of Bonus vetus estimations depending on how the Taylor-series is centered. One method, called BVU, uses simple averages while the other, called BVW, uses GDP weights. Depending on which method is used, the transaction costs are weighted differently. For advantages and disadvantages of both methods see @Baier2009 and @Baier2010.
 	
 To give an example with simple averages (BVU), distance would be transformed to Multilateral and World Resistance in the following way: 
 $$
@@ -157,7 +157,7 @@ with $D_{ij}$ denoting the bilateral distance, $N$ the number of countries and $
 
 When using weighted averages (BVW), the simple averages are replaced by GDP weights. The transformed variables are included as independent variables in the estimation. The resulting equation can be estimated by simple OLS.
 
-An example of how to apply the functions bvu and bvw to an example dataset in gravity and the resulting output is shown in the following:
+An example of how to apply the functions `bvu` and `bvw` to an example dataset in gravity and the resulting output is shown in the following:
 
 ```{r bvu}
 fit2 <- bvu(
@@ -172,7 +172,6 @@ fit2 <- bvu(
   )
 
 tidy(fit2)
-glance(fit2)
 ```
 
 ```{r bvw}
@@ -188,7 +187,116 @@ fit3 <- bvw(
   )
 
 tidy(fit3)
-glance(fit3)
+```
+
+## Poisson Pseudo Maximum Likelihood (PPML)
+
+@Santos2006 argue that estimating gravity equations in their additive form by OLS leads to inconsistency in the presence of heteroscedasticity and advice to estimate gravity models in their multiplicative form. 
+
+An example of how to apply the function `ppml` to an example dataset in gravity and the resulting output is shown in the following:
+
+```{r ppml}
+fit4 <- ppml(
+    dependent_variable = "flow",
+    distance = "distw",
+    additional_regressors = c("rta", "comcur", "contig"),
+    data = gravity_no_zeros
+  )
+
+tidy(fit4)
+```
+
+In order to obtain robust standard errors (i.e. in a similar way to `vce(robust)` in *Stata*) you can include `robust = T` to the arguments:
+
+```{r ppmlr}
+fit4 <- ppml(
+    dependent_variable = "flow",
+    distance = "distw",
+    additional_regressors = c("rta", "comcur", "contig"),
+    robust = TRUE,
+    data = gravity_no_zeros
+  )
+
+tidy(fit4)
+```
+
+## Gamma Pseudo Maximum Likelihood (GPML)
+
+The estimation method is similar to PPML, but utilizes the gamma instead of the poisson distribution, thereby implies different assumptions to the data structure and does not allow for zero trade values.
+
+@Santos2006 argue in favor of PPML instead of GPML, especially in case of heteroscedasticity, @Head2014 highlight that depending on data structure there exist cases where GPML is preferable to PPML.
+
+An example of how to apply the function `gpml` to an example dataset in gravity and the resulting output is shown in the following:
+
+```{r gpml}
+fit5 <- gpml(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = c("rta", "comcur", "contig"),
+  robust = TRUE,
+  data = gravity_no_zeros
+)
+
+tidy(fit5)
+```
+
+## Negative Binomial Pseudo Maximum Likelihood (NBPML)
+
+The estimation method is similar to PPML, but utilizes the negative binomial instead of the poisson distribution, thereby implies different assumptions to the data structure and does not allow for zero trade values.
+
+An example of how to apply the function `nbpml` to an example dataset in gravity and the resulting output is shown in the following:
+
+```{r nbpml}
+fit6 <- nbpml(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = c("rta", "comcur", "contig"),
+  robust = TRUE,
+  data = gravity_no_zeros
+)
+
+tidy(fit6)
+```
+
+## Tetrads
+
+In order to use the fixed effects method with panel data, a huge number of dummy variables has to be included into the estimation. Thus, estimating these models can lead to significant computational difficulties.
+
+@Head2010 present Tetrads as an estimation method circumventing this problem. They exploit the multiplicative form of the gravity equation to form the ratio of ratios. In doing so, both MR terms drop out of the equation.
+
+An example of how to apply the function `tetrads` to an example dataset in gravity and the resulting output is shown in the following:
+
+```{r tetrads}
+fit8 <- tetrads(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = "rta",
+  code_origin = "iso_o",
+  code_destination = "iso_d",
+  filter_origin = "CHN",
+  filter_destination = "USA",
+  data = gravity_no_zeros
+)
+
+tidy(fit8)
+```
+
+In addition to robust standard errors as in the previous examples, in the case of `tetrads` you can also be interested in computing multiway variance-covariance, an it can be done by adding `multiway = T` to the arguments:
+
+```{r tetrads2}
+fit8 <- tetrads(
+  dependent_variable = "flow",
+  distance = "distw",
+  additional_regressors = "rta",
+  code_origin = "iso_o",
+  code_destination = "iso_d",
+  filter_origin = "CHN",
+  filter_destination = "USA",
+  multiway = TRUE,
+  data = gravity_no_zeros
+)
+
+tidy(fit8)
 ```
 
 # References
