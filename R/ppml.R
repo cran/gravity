@@ -157,10 +157,14 @@ ppml <- function(dependent_variable,
   )
 
   if (robust == TRUE) {
-    model_ppml_robust <- lmtest::coeftest(
+    model_ppml_robust <- model_ppml
+    
+    robust_coefficients <- lmtest::coeftest(
       model_ppml,
       vcov = sandwich::vcovHC(model_ppml, type = "HC1", ...)
     )
+    
+    model_ppml_robust$coefficients <- robust_coefficients[1:length(rownames(robust_coefficients)),]
   }
 
   if (robust == FALSE) {
@@ -168,6 +172,7 @@ ppml <- function(dependent_variable,
     class(model_ppml) <- c(class(model_ppml), "gravity_ppml")
     return(model_ppml)
   } else {
+    model_ppml_robust$call <- form
     class(model_ppml_robust) <- c(class(model_ppml_robust), "gravity_ppml")
     return(model_ppml_robust)
   }
