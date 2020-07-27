@@ -128,15 +128,7 @@ fit <- ddm(
 summary(fit)
 ```
 
-The package returns lm or glm objects instead of summaries. Doing that allows to use our functions in conjunction with broom or other packages, for example:
-
-```{r ddm2}
-library(broom)
-
-tidy(fit)
-glance(fit)
-augment(fit)
-```
+The package returns lm or glm objects instead of summaries. Doing that allows to use our functions in conjunction with broom or other packages.
 
 ## Bonus Vetus
 
@@ -171,7 +163,7 @@ fit2 <- bvu(
     data = gravity_no_zeros
   )
 
-tidy(fit2)
+summary(fit2)
 ```
 
 ```{r bvw}
@@ -186,13 +178,12 @@ fit3 <- bvw(
     data = gravity_no_zeros
   )
 
-tidy(fit3)
+summary(fit3)
 ```
 
 ## Poisson Pseudo Maximum Likelihood (PPML)
 
 @Santos2006 argue that estimating gravity equations in their additive form by OLS leads to inconsistency in the presence of heteroscedasticity and advice to estimate gravity models in their multiplicative form. 
-
 An example of how to apply the function `ppml` to an example dataset in gravity and the resulting output is shown in the following:
 
 ```{r ppml}
@@ -203,13 +194,13 @@ fit4 <- ppml(
     data = gravity_no_zeros
   )
 
-tidy(fit4)
+summary(fit4)
 ```
 
 In order to obtain robust standard errors (i.e. in a similar way to `vce(robust)` in *Stata*) you can include `robust = T` to the arguments:
 
 ```{r ppmlr}
-fit4 <- ppml(
+fit4r <- ppml(
     dependent_variable = "flow",
     distance = "distw",
     additional_regressors = c("rta", "comcur", "contig"),
@@ -217,7 +208,7 @@ fit4 <- ppml(
     data = gravity_no_zeros
   )
 
-tidy(fit4)
+summary(fit4r)
 ```
 
 ## Gamma Pseudo Maximum Likelihood (GPML)
@@ -237,7 +228,7 @@ fit5 <- gpml(
   data = gravity_no_zeros
 )
 
-tidy(fit5)
+summary(fit5)
 ```
 
 ## Negative Binomial Pseudo Maximum Likelihood (NBPML)
@@ -255,7 +246,7 @@ fit6 <- nbpml(
   data = gravity_no_zeros
 )
 
-tidy(fit6)
+summary(fit6)
 ```
 
 ## Tetrads
@@ -278,7 +269,7 @@ fit8 <- tetrads(
   data = gravity_no_zeros
 )
 
-tidy(fit8)
+summary(fit8)
 ```
 
 In addition to robust standard errors as in the previous examples, in the case of `tetrads` you can also be interested in computing multiway variance-covariance, an it can be done by adding `multiway = T` to the arguments:
@@ -296,7 +287,7 @@ fit8 <- tetrads(
   data = gravity_no_zeros
 )
 
-tidy(fit8)
+summary(fit8)
 ```
 
 # References

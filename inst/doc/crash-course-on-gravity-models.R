@@ -1,7 +1,7 @@
 ## ----setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE----
 knitr::opts_chunk$set(eval = TRUE, message = FALSE, warning = FALSE)
 
-## ----ddm-----------------------------------------------------------------
+## ----ddm----------------------------------------------------------------------
 library(gravity)
 
 fit <- ddm(
@@ -15,14 +15,7 @@ fit <- ddm(
 
 summary(fit)
 
-## ----ddm2----------------------------------------------------------------
-library(broom)
-
-tidy(fit)
-glance(fit)
-augment(fit)
-
-## ----bvu-----------------------------------------------------------------
+## ----bvu----------------------------------------------------------------------
 fit2 <- bvu(
     dependent_variable = "flow",
     distance = "distw",
@@ -34,9 +27,9 @@ fit2 <- bvu(
     data = gravity_no_zeros
   )
 
-tidy(fit2)
+summary(fit2)
 
-## ----bvw-----------------------------------------------------------------
+## ----bvw----------------------------------------------------------------------
 fit3 <- bvw(
     dependent_variable = "flow",
     distance = "distw",
@@ -48,9 +41,9 @@ fit3 <- bvw(
     data = gravity_no_zeros
   )
 
-tidy(fit3)
+summary(fit3)
 
-## ----ppml----------------------------------------------------------------
+## ----ppml---------------------------------------------------------------------
 fit4 <- ppml(
     dependent_variable = "flow",
     distance = "distw",
@@ -58,10 +51,10 @@ fit4 <- ppml(
     data = gravity_no_zeros
   )
 
-tidy(fit4)
+summary(fit4)
 
-## ----ppmlr---------------------------------------------------------------
-fit4 <- ppml(
+## ----ppmlr--------------------------------------------------------------------
+fit4r <- ppml(
     dependent_variable = "flow",
     distance = "distw",
     additional_regressors = c("rta", "comcur", "contig"),
@@ -69,9 +62,9 @@ fit4 <- ppml(
     data = gravity_no_zeros
   )
 
-tidy(fit4)
+summary(fit4r)
 
-## ----gpml----------------------------------------------------------------
+## ----gpml---------------------------------------------------------------------
 fit5 <- gpml(
   dependent_variable = "flow",
   distance = "distw",
@@ -80,9 +73,9 @@ fit5 <- gpml(
   data = gravity_no_zeros
 )
 
-tidy(fit5)
+summary(fit5)
 
-## ----nbpml---------------------------------------------------------------
+## ----nbpml--------------------------------------------------------------------
 fit6 <- nbpml(
   dependent_variable = "flow",
   distance = "distw",
@@ -91,9 +84,9 @@ fit6 <- nbpml(
   data = gravity_no_zeros
 )
 
-tidy(fit6)
+summary(fit6)
 
-## ----tetrads-------------------------------------------------------------
+## ----tetrads------------------------------------------------------------------
 fit8 <- tetrads(
   dependent_variable = "flow",
   distance = "distw",
@@ -105,9 +98,9 @@ fit8 <- tetrads(
   data = gravity_no_zeros
 )
 
-tidy(fit8)
+summary(fit8)
 
-## ----tetrads2------------------------------------------------------------
+## ----tetrads2-----------------------------------------------------------------
 fit8 <- tetrads(
   dependent_variable = "flow",
   distance = "distw",
@@ -120,5 +113,5 @@ fit8 <- tetrads(
   data = gravity_no_zeros
 )
 
-tidy(fit8)
+summary(fit8)
 

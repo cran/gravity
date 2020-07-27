@@ -4,8 +4,14 @@
 \alias{nbpml}
 \title{Negative Binomial Pseudo Maximum Likelihood (NBPML)}
 \usage{
-nbpml(dependent_variable, distance, additional_regressors,
-  robust = FALSE, data, ...)
+nbpml(
+  dependent_variable,
+  distance,
+  additional_regressors,
+  robust = FALSE,
+  data,
+  ...
+)
 }
 \arguments{
 \item{dependent_variable}{(Type: character) name of the dependent variable. This variable is logged and then used as
@@ -75,8 +81,8 @@ see \insertCite{Egger2003;textual}{gravity}, \insertCite{Gomez-Herrera2013;textu
 library(dplyr)
 data("gravity_no_zeros")
 
-# Choose 5 countries for testing
-countries_chosen <- c("AUS", "CHN", "GBR", "BRA", "CAN")
+# Choose 3 countries for testing
+countries_chosen <- c("AUS", "GBR", "CAN")
 grav_small <- filter(gravity_no_zeros, iso_o \%in\% countries_chosen)
 
 fit <- nbpml(
